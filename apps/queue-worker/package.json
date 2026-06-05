@@ -1,0 +1,27 @@
+{
+  "name": "queue-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@edgetrail/db": "workspace:*",
+    "@edgetrail/shared": "workspace:*",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.16.10",
+    "@types/node": "^22.10.2",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.5",
+    "wrangler": "^4.98.0"
+  }
+}
