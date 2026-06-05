@@ -1,0 +1,41 @@
+{
+  "name": "edgetrail",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "check": "biome check .",
+    "check:write": "biome check --write .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "cf-typegen": "pnpm -r --if-present cf-typegen",
+    "dev:web": "pnpm --filter web dev",
+    "dev:collector": "pnpm --filter collector-worker dev",
+    "dev:queue": "pnpm --filter queue-worker dev",
+    "db:generate": "pnpm --filter @edgetrail/db db:generate"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.5",
+    "@cloudflare/vitest-pool-workers": "^0.16.10",
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^4.1.5",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.5",
+    "wrangler": "^4.98.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ],
+    "overrides": {
+      "kysely": "0.28.17"
+    }
+  }
+}
