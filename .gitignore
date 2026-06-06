@@ -9,6 +9,9 @@ build/
 .turbo/
 *.tsbuildinfo
 
+# Internal planning docs
+docs/
+
 # Test and coverage output
 coverage/
 .nyc_output/
