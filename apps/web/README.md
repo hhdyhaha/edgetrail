@@ -12,7 +12,12 @@ TanStack Start dashboard deployed as a Cloudflare Worker. It owns marketing, Goo
 pnpm dev
 ```
 
-The app expects the collector to be reachable at `COLLECTOR_ORIGIN` from `wrangler.jsonc`.
+Local development is the test environment. Keep `.dev.vars` on localhost/test
+OAuth credentials and use the top-level bindings in `wrangler.jsonc`.
+
+Production values live under `env.production` in `wrangler.jsonc` and in
+Cloudflare Worker secrets. Do not copy production OAuth secrets into local
+`.dev.vars`.
 
 ## Quality Gates
 
@@ -29,11 +34,17 @@ pnpm cf-typegen
 Use Cloudflare/Wrangler secrets for the required values declared in `wrangler.jsonc`:
 
 ```sh
-wrangler secret put BETTER_AUTH_SECRET
-wrangler secret put GOOGLE_CLIENT_ID
-wrangler secret put GOOGLE_CLIENT_SECRET
-wrangler secret put CLOUDFLARE_ACCOUNT_ID
-wrangler secret put CLOUDFLARE_API_TOKEN
+wrangler secret put BETTER_AUTH_SECRET --env production
+wrangler secret put GOOGLE_CLIENT_ID --env production
+wrangler secret put GOOGLE_CLIENT_SECRET --env production
+wrangler secret put CLOUDFLARE_ACCOUNT_ID --env production
+wrangler secret put CLOUDFLARE_API_TOKEN --env production
+```
+
+Production deploys must use the production environment:
+
+```sh
+pnpm run deploy
 ```
 
 Do not commit `.dev.vars`, `.env`, Cloudflare API tokens, Better Auth secrets, or OAuth client secrets.

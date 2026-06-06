@@ -19,7 +19,7 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "deploy": "pnpm run build && wrangler deploy",
+    "deploy": "CLOUDFLARE_ENV=production pnpm run build && CLOUDFLARE_ENV=production wrangler deploy --env production",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

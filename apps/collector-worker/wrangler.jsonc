@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "collector-worker",
+  "name": "collector-worker-local",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-05",
   "compatibility_flags": ["nodejs_compat"],
@@ -31,5 +31,34 @@
         "queue": "your-edgetrail-events"
       }
     ]
+  },
+  "env": {
+    "production": {
+      "name": "collector-worker",
+      "secrets": {
+        "required": ["HASH_SECRET"]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "your-edgetrail-production",
+          "database_id": "replace-with-production-d1-database-id"
+        }
+      ],
+      "analytics_engine_datasets": [
+        {
+          "binding": "ANALYTICS",
+          "dataset": "your-web-analytics-events"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "EVENT_QUEUE",
+            "queue": "your-edgetrail-events"
+          }
+        ]
+      }
+    }
   }
 }

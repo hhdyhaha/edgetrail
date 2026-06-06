@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "your-edgetrail-web",
+  "name": "your-edgetrail-web-local",
   "compatibility_date": "2026-06-05",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
@@ -27,5 +27,30 @@
       "database_name": "your-edgetrail-dev",
       "database_id": "00000000-0000-0000-0000-000000000001"
     }
-  ]
+  ],
+  "env": {
+    "production": {
+      "name": "your-edgetrail-web",
+      "vars": {
+        "BETTER_AUTH_URL": "https://your-edgetrail-web.example.com",
+        "COLLECTOR_ORIGIN": "https://your-edgetrail-collector.example.com"
+      },
+      "secrets": {
+        "required": [
+          "BETTER_AUTH_SECRET",
+          "GOOGLE_CLIENT_ID",
+          "GOOGLE_CLIENT_SECRET",
+          "CLOUDFLARE_ACCOUNT_ID",
+          "CLOUDFLARE_API_TOKEN"
+        ]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "your-edgetrail-production",
+          "database_id": "replace-with-production-d1-database-id"
+        }
+      ]
+    }
+  }
 }
