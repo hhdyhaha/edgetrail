@@ -1,6 +1,6 @@
 # EdgeTrail Analytics
 
-[English README](./README.md)
+[English](./README.md) | 中文
 
 EdgeTrail Analytics 是一个隐私优先、可自托管的网站分析 MVP，专门围绕
 Cloudflare 服务构建。

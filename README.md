@@ -1,6 +1,6 @@
 # EdgeTrail Analytics
 
-[中文说明](./README.zh-CN.md)
+English | [中文](./README.zh-CN.md)
 
 EdgeTrail Analytics is a privacy-first, self-hostable web analytics MVP built
 for Cloudflare.
