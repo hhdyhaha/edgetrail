@@ -1,4 +1,4 @@
-# Edge Analytics Web
+# EdgeTrail Analytics Web
 
 TanStack Start dashboard deployed as a Cloudflare Worker. It owns marketing, Google-only Better Auth, site management, private analytics APIs, and public share dashboards.
 

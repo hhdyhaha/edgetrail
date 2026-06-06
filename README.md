@@ -1,6 +1,8 @@
-# Edge Analytics
+# EdgeTrail Analytics
 
-Cloudflare-native, privacy-first web analytics MVP built as a clean-slate pnpm workspace.
+Privacy-first web analytics, built for Cloudflare.
+
+EdgeTrail Analytics is a Cloudflare-native, self-hostable web analytics MVP built as a clean-slate pnpm workspace.
 
 ## Apps
 

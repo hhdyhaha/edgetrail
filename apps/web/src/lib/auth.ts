@@ -15,7 +15,7 @@ export const auth = betterAuth({
       disableIpTracking: true,
     },
   },
-  appName: "EdgeTrail",
+  appName: "EdgeTrail Analytics",
   baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(drizzle(env.DB, { schema }), {
     provider: "sqlite",

@@ -1,9 +1,9 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "app_title": "Edge Analytics",
-  "app_tagline": "Cloudflare-native",
+  "app_title": "EdgeTrail Analytics",
+  "app_tagline": "Built for Cloudflare",
   "root_description": "Cloudflare-native, privacy-first web analytics for indie tools and SaaS sites.",
-  "root_og_description": "Self-hostable Cloudflare-native analytics with no cookies and no raw IP storage.",
+  "root_og_description": "Self-hosted web analytics on Cloudflare with no cookies and no raw IP storage.",
   "language_switcher_label": "Language",
   "language_english": "EN",
   "language_chinese": "中文",

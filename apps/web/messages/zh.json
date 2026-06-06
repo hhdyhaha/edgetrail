@@ -1,9 +1,9 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "app_title": "Edge Analytics",
-  "app_tagline": "Cloudflare-native",
+  "app_title": "EdgeTrail Analytics",
+  "app_tagline": "Built for Cloudflare",
   "root_description": "面向独立工具和 SaaS 站点的 Cloudflare-native、隐私优先网站分析。",
-  "root_og_description": "可自托管的 Cloudflare-native 分析工具，不使用 cookie，也不存储原始 IP。",
+  "root_og_description": "运行在 Cloudflare 上的自托管网站分析工具，不使用 cookie，也不存储原始 IP。",
   "language_switcher_label": "语言",
   "language_english": "EN",
   "language_chinese": "中文",

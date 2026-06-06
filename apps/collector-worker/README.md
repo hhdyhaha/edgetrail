@@ -1,4 +1,4 @@
-# Edge Analytics Collector Worker
+# EdgeTrail Analytics Collector Worker
 
 Hono Worker responsible for `/script.js`, `/collect`, and `/health`. It validates site/domain config from D1, writes sanitized datapoints to Workers Analytics Engine, and enqueues sanitized messages for rollup/archive processing.
 

@@ -1,8 +1,4 @@
-import {
-  incrementRollups,
-  insertProcessedQueueEvent,
-  recordArchiveObject,
-} from "@edgetrail/db";
+import { incrementRollups, insertProcessedQueueEvent, recordArchiveObject } from "@edgetrail/db";
 import {
   type QueueEventMessage,
   queueEventMessageSchema,
