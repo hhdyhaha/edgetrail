@@ -16,8 +16,9 @@ Local development is the test environment. Keep `.dev.vars` on localhost/test
 OAuth credentials and use the top-level bindings in `wrangler.jsonc`.
 
 Production values live under `env.production` in `wrangler.jsonc` and in
-Cloudflare Worker secrets. Do not copy production OAuth secrets into local
-`.dev.vars`.
+Cloudflare Worker secrets. The committed production resource names and IDs are
+open-source placeholders; replace them in your deployment workflow or private
+copy before deploying. Do not copy production OAuth secrets into local `.dev.vars`.
 
 ## Quality Gates
 

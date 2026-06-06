@@ -12,6 +12,11 @@ build/
 # Internal planning docs
 docs/
 
+# Internal agent/tooling metadata
+AGENTS.md
+.cursorrules
+.cta.json
+
 # Test and coverage output
 coverage/
 .nyc_output/

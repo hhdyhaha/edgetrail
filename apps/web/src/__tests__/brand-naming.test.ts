@@ -4,7 +4,7 @@ import queueWrangler from "../../../../apps/queue-worker/wrangler.jsonc?raw";
 import webWrangler from "../../wrangler.jsonc?raw";
 
 describe("EdgeTrail naming", () => {
-  it("uses EdgeTrail Cloudflare resource names in worker configs", () => {
+  it("uses open-source placeholder Cloudflare resource names in worker configs", () => {
     const configs = [webWrangler, collectorWrangler, queueWrangler].join("\n");
     const oldResourcePrefix = ["edge", "analytics"].join("-");
 
@@ -12,6 +12,7 @@ describe("EdgeTrail naming", () => {
     expect(configs).toContain("your-edgetrail-collector");
     expect(configs).toContain("your-edgetrail-queue");
     expect(configs).toContain("your-edgetrail-events");
+    expect(configs).toContain("your-web-analytics-events");
     expect(configs).toContain("your-edgetrail-archive-production");
     expect(configs).not.toContain(oldResourcePrefix);
   });
