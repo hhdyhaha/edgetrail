@@ -3,6 +3,7 @@ import { BarChart3, Lock, Settings, ShieldCheck } from "lucide-react";
 import type * as React from "react";
 import { LocaleSwitcher } from "#/i18n/locale-switcher";
 import { m } from "#/paraglide/messages";
+import { AppLogo } from "./app-logo";
 import { ThemeToggle } from "./theme-toggle";
 
 type AppShellProps = {
@@ -35,7 +36,7 @@ export function AppShell({
       <div className="mx-auto grid max-w-[1480px] gap-6 px-4 py-5 lg:grid-cols-[238px_1fr] xl:px-6">
         <aside className="flex min-h-[calc(100vh-2.5rem)] flex-col rounded-lg border border-[#dee3ea] bg-white p-5 shadow-[0_5px_0_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-950">
           <Link className="flex items-center gap-3" to="/app">
-            <span className="inline-flex h-7 w-7 rounded-md bg-[#ec7124]" />
+            <AppLogo className="h-8 w-8" />
             <span>
               <span className="block text-xl font-bold leading-5">{m.app_title()}</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">{m.app_tagline()}</span>

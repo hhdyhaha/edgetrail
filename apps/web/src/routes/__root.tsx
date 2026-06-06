@@ -20,7 +20,11 @@ export const Route = createRootRoute({
         content: m.root_og_description(),
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "icon", type: "image/png", sizes: "64x64", href: "/favicon.png" },
+      { rel: "apple-touch-icon", sizes: "192x192", href: "/logo192.png" },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   shellComponent: RootDocument,
 });

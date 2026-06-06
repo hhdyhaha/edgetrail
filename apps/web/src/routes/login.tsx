@@ -6,6 +6,7 @@ import { authClient } from "#/lib/auth-client";
 import { getSession } from "#/lib/auth-functions";
 import { m } from "#/paraglide/messages";
 import { getLocale, localizeHref } from "#/paraglide/runtime";
+import { AppLogo } from "#/ui/app-logo";
 import { ThemeToggle } from "#/ui/theme-toggle";
 
 export const Route = createFileRoute("/login")({
@@ -25,7 +26,7 @@ function LoginPage() {
         <Card className="grid w-full overflow-hidden p-0 md:grid-cols-[1fr_300px]">
           <section className="p-8 sm:p-12">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-7 w-7 rounded-md bg-[#ec7124]" />
+              <AppLogo className="h-8 w-8" />
               <div>
                 <div className="text-xl font-bold leading-5">{m.app_title()}</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">{m.app_tagline()}</div>

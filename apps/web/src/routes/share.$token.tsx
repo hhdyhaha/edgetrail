@@ -4,6 +4,7 @@ import { LocaleSwitcher } from "#/i18n/locale-switcher";
 import { getPublicShareAvailability } from "#/lib/share-functions";
 import { m } from "#/paraglide/messages";
 import { AnalyticsDashboard } from "#/ui/analytics-dashboard";
+import { AppLogo } from "#/ui/app-logo";
 import { ThemeToggle } from "#/ui/theme-toggle";
 
 export const Route = createFileRoute("/share/$token")({
@@ -20,7 +21,7 @@ function PublicShare() {
       <section className="mx-auto max-w-[1400px] py-3">
         <header className="mb-6 flex flex-col gap-5 rounded-lg border border-[#dee3ea] bg-white px-6 py-5 shadow-[0_5px_0_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
           <div className="flex shrink-0 items-center gap-4">
-            <span className="inline-flex h-7 w-7 rounded-md bg-[#ec7124]" />
+            <AppLogo className="h-8 w-8" />
             <div>
               <div className="text-xl font-bold leading-5">{m.app_title()}</div>
               <div className="text-xs text-slate-500 dark:text-slate-400">{m.app_tagline()}</div>
