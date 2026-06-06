@@ -6,8 +6,10 @@
   "scripts": {
     "deploy": "wrangler deploy --env production",
     "dev": "wrangler dev",
+    "dev:local": "wrangler dev --config wrangler.local.jsonc",
     "start": "wrangler dev",
     "cf-typegen": "wrangler types",
+    "cf-typegen:local": "wrangler types --config wrangler.local.jsonc",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "build": "tsc -p tsconfig.json --noEmit"

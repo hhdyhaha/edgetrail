@@ -16,8 +16,11 @@
     "build": "pnpm -r --if-present build",
     "cf-typegen": "pnpm -r --if-present cf-typegen",
     "dev:web": "pnpm --filter web dev",
+    "dev:web:local": "pnpm --filter web dev:local",
     "dev:collector": "pnpm --filter collector-worker dev",
+    "dev:collector:local": "pnpm --filter collector-worker dev:local",
     "dev:queue": "pnpm --filter queue-worker dev",
+    "dev:queue:local": "pnpm --filter queue-worker dev:local",
     "db:generate": "pnpm --filter @edgetrail/db db:generate"
   },
   "devDependencies": {

@@ -31,4 +31,29 @@ pnpm test
 pnpm build
 ```
 
+## Local Cloudflare Config
+
+The committed `wrangler.jsonc` files intentionally use public placeholder
+resource names. Keep real Cloudflare resource names, D1 database IDs, Queue
+names, R2 bucket names, and Workers Analytics Engine datasets in ignored local
+files.
+
+For local development, copy each app's `wrangler.jsonc` to
+`wrangler.local.jsonc`, replace placeholders with your own development
+resources, and keep secrets in `.dev.vars`.
+
+```sh
+cp apps/web/wrangler.jsonc apps/web/wrangler.local.jsonc
+cp apps/collector-worker/wrangler.jsonc apps/collector-worker/wrangler.local.jsonc
+cp apps/queue-worker/wrangler.jsonc apps/queue-worker/wrangler.local.jsonc
+```
+
+Then run local development with the local config scripts:
+
+```sh
+pnpm dev:web:local
+pnpm dev:collector:local
+pnpm dev:queue:local
+```
+
 Production deploys, production D1 migrations, production Queue/R2 changes, domain changes, and secret mutation require explicit user confirmation.
