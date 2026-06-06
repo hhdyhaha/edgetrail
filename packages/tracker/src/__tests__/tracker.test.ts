@@ -26,7 +26,10 @@ describe("tracker script", () => {
   });
 
   it("exposes the manual custom event API", () => {
-    expect(TRACKER_SCRIPT).toContain("edgeAnalytics");
+    const oldGlobal = "edge" + "Analytics";
+
+    expect(TRACKER_SCRIPT).toContain("edgeTrail");
+    expect(TRACKER_SCRIPT).not.toContain(oldGlobal);
     expect(TRACKER_SCRIPT).toContain("custom_event");
   });
 });

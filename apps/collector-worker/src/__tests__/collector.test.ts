@@ -63,7 +63,24 @@ describe("collector worker", () => {
     const response = await request("http://collector.test/script.js", {}, createEnv());
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("application/javascript");
-    expect(await response.text()).toContain("edgeAnalytics");
+    expect(await response.text()).toContain("edgeTrail");
+  });
+
+  it("allows branded preflight headers", async () => {
+    const response = await request(
+      "http://collector.test/collect",
+      {
+        method: "OPTIONS",
+        headers: {
+          Origin: "https://example.com",
+          "x-edgetrail-site": "pub_1",
+        },
+      },
+      createEnv(),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Headers")).toContain("x-edgetrail-site");
   });
 
   it("returns 204 and writes WAE plus queue for a valid collect request", async () => {

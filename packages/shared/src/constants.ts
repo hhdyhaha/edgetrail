@@ -33,6 +33,6 @@ export const DIMENSIONS = [
   "utm_campaign",
 ] as const;
 
-export const TRACKER_GLOBAL = "edgeAnalytics";
+export const TRACKER_GLOBAL = "edgeTrail";
 
 export const COLLECT_ENDPOINT = "/collect";

@@ -48,7 +48,7 @@ app.get(
 );
 
 app.options(COLLECT_ENDPOINT, async (c) => {
-  const publicSiteId = c.req.header("x-edge-site") ?? "";
+  const publicSiteId = c.req.header("x-edgetrail-site") ?? "";
   const origin = c.req.header("Origin") ?? "";
   const config = publicSiteId ? await getCachedSiteConfig(c.env, publicSiteId) : null;
   if (!config || !isAllowedOrigin(origin, config.allowedDomains)) {
@@ -242,7 +242,7 @@ async function hmacHex(secret: string, message: string): Promise<string> {
 
 function corsHeaders(origin: string): Record<string, string> {
   return {
-    "Access-Control-Allow-Headers": "Content-Type, x-edge-site",
+    "Access-Control-Allow-Headers": "Content-Type, x-edgetrail-site",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Origin": origin,
     Vary: "Origin",
