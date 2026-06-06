@@ -137,6 +137,7 @@ Web 应用需要填写：
 - `GOOGLE_CLIENT_SECRET`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
+- `WAE_DATASET`
 
 Collector 需要填写：
 
@@ -205,7 +206,7 @@ binding 占位符，设置 Wrangler secrets，应用生产 D1 migrations，并�
 - Cloudflare API token
 - Google OAuth secret
 - Better Auth secret
-- 真实生产数据库 ID、queue 名称、bucket 名称或私有运营笔记
+- 真实生产数据库 ID、queue 名称、bucket 名称、Workers Analytics Engine dataset 名称或私有运营笔记
 
 ## License
 

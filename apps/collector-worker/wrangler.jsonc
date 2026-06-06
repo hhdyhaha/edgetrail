@@ -21,7 +21,7 @@
   "analytics_engine_datasets": [
     {
       "binding": "ANALYTICS",
-      "dataset": "your-web-analytics-events"
+      "dataset": "your_web_analytics_events"
     }
   ],
   "queues": {
@@ -48,7 +48,7 @@
       "analytics_engine_datasets": [
         {
           "binding": "ANALYTICS",
-          "dataset": "your-web-analytics-events"
+          "dataset": "your_web_analytics_events"
         }
       ],
       "queues": {

@@ -12,7 +12,7 @@ describe("EdgeTrail naming", () => {
     expect(configs).toContain("your-edgetrail-collector");
     expect(configs).toContain("your-edgetrail-queue");
     expect(configs).toContain("your-edgetrail-events");
-    expect(configs).toContain("your-web-analytics-events");
+    expect(configs).toContain("your_web_analytics_events");
     expect(configs).toContain("your-edgetrail-archive-production");
     expect(configs).not.toContain(oldResourcePrefix);
   });

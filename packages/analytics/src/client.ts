@@ -15,6 +15,16 @@ export class MissingWaeConfigError extends Error {
   }
 }
 
+export class WaeSqlQueryError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`Workers Analytics Engine SQL failed with ${status}`);
+    this.name = "WaeSqlQueryError";
+    this.status = status;
+  }
+}
+
 export async function queryWorkersAnalyticsEngine(
   config: Partial<WaeSqlClientConfig>,
   sql: string,
@@ -36,7 +46,8 @@ export async function queryWorkersAnalyticsEngine(
   );
 
   if (!response.ok) {
-    throw new Error(`Workers Analytics Engine SQL failed with ${response.status}`);
+    await response.body?.cancel();
+    throw new WaeSqlQueryError(response.status);
   }
 
   return (await response.json()) as WaeSqlResult;

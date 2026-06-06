@@ -76,20 +76,20 @@ describe("WAE SQL builders", () => {
   };
 
   it("uses sampling-aware pageview counts", () => {
-    const sql = buildSummarySql("site_1", range);
+    const sql = buildSummarySql("test_dataset", "site_1", range);
     expect(sql).toContain("SUM(_sample_interval) AS pageviews");
     expect(sql).not.toContain("count() AS pageviews");
     expect(sql).toContain("blob9 != 'bot'");
   });
 
   it("builds timeseries SQL with bucket grouping", () => {
-    const sql = buildTimeseriesSql("site_1", range, 3600);
-    expect(sql).toContain("intDiv(toUInt32(timestamp), 3600)");
+    const sql = buildTimeseriesSql("test_dataset", "site_1", range, 3600);
+    expect(sql).toContain("intDiv(toUnixTimestamp(timestamp), 3600)");
     expect(sql).toContain("ORDER BY time_bucket ASC");
   });
 
   it("builds dimension SQL with top 20 limit", () => {
-    const sql = buildDimensionSql("site_1", range, "browsers");
+    const sql = buildDimensionSql("test_dataset", "site_1", range, "browsers");
     expect(sql).toContain("blob7 AS browser");
     expect(sql).toContain("LIMIT 20");
     expect(sql).toContain("SUM(_sample_interval) AS pageviews");

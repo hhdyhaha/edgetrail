@@ -18,7 +18,8 @@
       "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET",
       "CLOUDFLARE_ACCOUNT_ID",
-      "CLOUDFLARE_API_TOKEN"
+      "CLOUDFLARE_API_TOKEN",
+      "WAE_DATASET"
     ]
   },
   "d1_databases": [
@@ -41,7 +42,8 @@
           "GOOGLE_CLIENT_ID",
           "GOOGLE_CLIENT_SECRET",
           "CLOUDFLARE_ACCOUNT_ID",
-          "CLOUDFLARE_API_TOKEN"
+          "CLOUDFLARE_API_TOKEN",
+          "WAE_DATASET"
         ]
       },
       "d1_databases": [

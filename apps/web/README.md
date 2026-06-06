@@ -18,7 +18,9 @@ OAuth credentials and use the top-level bindings in `wrangler.jsonc`.
 Production values live under `env.production` in `wrangler.jsonc` and in
 Cloudflare Worker secrets. The committed production resource names and IDs are
 open-source placeholders; replace them in your deployment workflow or private
-copy before deploying. Do not copy production OAuth secrets into local `.dev.vars`.
+copy before deploying. Keep private Workers Analytics Engine dataset names in
+Worker secrets or ignored local config, not in committed source. Do not copy
+production OAuth secrets into local `.dev.vars`.
 
 ## Quality Gates
 
@@ -40,6 +42,7 @@ wrangler secret put GOOGLE_CLIENT_ID --env production
 wrangler secret put GOOGLE_CLIENT_SECRET --env production
 wrangler secret put CLOUDFLARE_ACCOUNT_ID --env production
 wrangler secret put CLOUDFLARE_API_TOKEN --env production
+wrangler secret put WAE_DATASET --env production
 ```
 
 Production deploys must use the production environment:
@@ -48,4 +51,4 @@ Production deploys must use the production environment:
 pnpm run deploy
 ```
 
-Do not commit `.dev.vars`, `.env`, Cloudflare API tokens, Better Auth secrets, or OAuth client secrets.
+Do not commit `.dev.vars`, `.env`, Cloudflare API tokens, Better Auth secrets, OAuth client secrets, or private WAE dataset names.

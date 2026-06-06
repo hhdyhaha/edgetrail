@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => {
     disableShareLink: vi.fn(),
     getEnabledShareLink: vi.fn(),
     queryWorkersAnalyticsEngine: vi.fn(),
+    WaeSqlQueryError: undefined as
+      | typeof import("@edgetrail/analytics").WaeSqlQueryError
+      | undefined,
   };
 });
 
@@ -34,6 +37,7 @@ vi.mock("cloudflare:workers", () => ({
     GOOGLE_CLIENT_SECRET: "test-google-secret",
     CLOUDFLARE_ACCOUNT_ID: "test-account-id",
     CLOUDFLARE_API_TOKEN: "test-api-token",
+    WAE_DATASET: "test_dataset",
   },
 }));
 
@@ -63,6 +67,7 @@ vi.mock("@edgetrail/db", () => ({
 
 vi.mock("@edgetrail/analytics", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@edgetrail/analytics")>();
+  mocks.WaeSqlQueryError = actual.WaeSqlQueryError;
   return {
     ...actual,
     queryWorkersAnalyticsEngine: mocks.queryWorkersAnalyticsEngine,
@@ -176,5 +181,28 @@ describe("web API permission and public surface", () => {
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({ error: "share_not_found" });
+  });
+
+  it("returns a safe WAE error code when Cloudflare SQL fails", async () => {
+    if (!mocks.WaeSqlQueryError) {
+      throw new Error("WaeSqlQueryError mock was not initialized");
+    }
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mocks.queryWorkersAnalyticsEngine.mockRejectedValue(new mocks.WaeSqlQueryError(422));
+
+    try {
+      const response = await handleApiRequest(
+        new Request("http://app.test/api/sites/site_1/summary?range=7d"),
+      );
+
+      expect(response.status).toBe(502);
+      await expect(response.json()).resolves.toEqual({
+        approximate: true,
+        error: "wae_sql_query_failed",
+      });
+      expect(JSON.stringify(consoleError.mock.calls)).not.toContain("private_dataset_name");
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 });

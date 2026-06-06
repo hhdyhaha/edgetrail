@@ -6,6 +6,7 @@ import {
   type DimensionKind,
   MissingWaeConfigError,
   queryWorkersAnalyticsEngine,
+  WaeSqlQueryError,
 } from "@edgetrail/analytics";
 import {
   addSiteDomain,
@@ -212,25 +213,45 @@ async function handlePrivateAnalytics(
   const range = parseRange(request);
   assertWithinWaeRetention(range);
   try {
+    const waeConfig = getWaeQueryConfig();
     let sql: string;
     if (kind === "summary") {
-      sql = buildSummarySql(siteId, range);
+      sql = buildSummarySql(waeConfig.dataset, siteId, range);
     } else if (kind === "timeseries") {
-      sql = buildTimeseriesSql(siteId, range, chooseBucketSeconds(range));
+      sql = buildTimeseriesSql(waeConfig.dataset, siteId, range, chooseBucketSeconds(range));
     } else {
-      sql = buildDimensionSql(siteId, range, kind);
+      sql = buildDimensionSql(waeConfig.dataset, siteId, range, kind);
     }
-    const result = await queryWorkersAnalyticsEngine(
-      { accountId: env.CLOUDFLARE_ACCOUNT_ID, apiToken: env.CLOUDFLARE_API_TOKEN },
-      sql,
-    );
+    const result = await queryWorkersAnalyticsEngine(waeConfig, sql);
     return json({ data: result.data, meta: result.meta, approximate: true });
   } catch (error) {
     if (error instanceof MissingWaeConfigError) {
       return json({ error: "missing_cloudflare_query_config", approximate: true }, 503);
     }
+    if (error instanceof WaeSqlQueryError) {
+      // biome-ignore lint/suspicious/noConsole: Worker error logs are sanitized before emission.
+      console.error(
+        JSON.stringify({
+          code: "wae_sql_query_failed",
+          message: error.message,
+          status: error.status,
+        }),
+      );
+      return json({ error: "wae_sql_query_failed", approximate: true }, 502);
+    }
     throw error;
   }
+}
+
+function getWaeQueryConfig() {
+  if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_API_TOKEN || !env.WAE_DATASET) {
+    throw new MissingWaeConfigError();
+  }
+  return {
+    accountId: env.CLOUDFLARE_ACCOUNT_ID,
+    apiToken: env.CLOUDFLARE_API_TOKEN,
+    dataset: env.WAE_DATASET,
+  };
 }
 
 function parseRange(request: Request) {

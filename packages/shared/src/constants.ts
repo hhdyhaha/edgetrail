@@ -1,7 +1,5 @@
 export const SCHEMA_VERSION = "v1";
 
-export const WAE_DATASET = "your-web-analytics-events";
-
 export const MAX_WAE_BLOBS = 20;
 export const MAX_WAE_DOUBLES = 20;
 export const MAX_WAE_INDEXES = 1;

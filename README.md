@@ -147,6 +147,7 @@ Fill the web app secrets:
 - `GOOGLE_CLIENT_SECRET`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
+- `WAE_DATASET`
 
 Fill the collector secret:
 
@@ -219,8 +220,8 @@ Do not commit:
 - Cloudflare API tokens
 - Google OAuth secrets
 - Better Auth secrets
-- real production database IDs, queue names, bucket names, or private operation
-  notes
+- real production database IDs, queue names, bucket names, Workers Analytics
+  Engine dataset names, or private operation notes
 
 ## License
 
