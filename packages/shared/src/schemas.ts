@@ -72,6 +72,24 @@ export const queueEventMessageSchema = z
 
 export type QueueEventMessage = z.infer<typeof queueEventMessageSchema>;
 
+export const presenceRoleSchema = z.enum(["tracker", "dashboard"]);
+export type PresenceRole = z.infer<typeof presenceRoleSchema>;
+
+export const presencePingSchema = z.object({ type: z.literal("ping") }).strict();
+export const presencePongSchema = z.object({ type: z.literal("pong") }).strict();
+
+export const presenceSnapshotSchema = z
+  .object({
+    type: z.literal("presence"),
+    online: z.number().int().nonnegative(),
+    tracked: z.number().int().nonnegative(),
+    dashboards: z.number().int().nonnegative(),
+    updatedAt: z.string().datetime(),
+  })
+  .strict();
+
+export type PresenceSnapshot = z.infer<typeof presenceSnapshotSchema>;
+
 export const createOrganizationSchema = z.object({
   name: z.string().trim().min(1).max(80),
 });

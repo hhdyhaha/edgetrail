@@ -16,11 +16,11 @@ EdgeTrail 提供一套运行在 Cloudflare 上的小型分析系统：
   查看分析报表。
 - 一个很小的浏览器跟踪脚本，由你自己的 collector worker 提供。
 - 一个 collector worker：校验事件、清理敏感数据、写入分析数据，并把清理后的事件
-  发送到队列。
+  发送到队列，同时通过 Durable Objects 维护实时在线状态。
 - 一个 queue worker：更新 D1 每日汇总，并把事件批次以 NDJSON 形式归档到 R2。
 - 登录用户可看的私有仪表盘，以及可选的只读公开分享链接。
 
-当前仪表盘可以查看：浏览量、近似访客数、近似访问次数、每次访问浏览量、流量趋势、
+当前仪表盘可以查看：当前在线、浏览量、近似访客数、近似访问次数、每次访问浏览量、流量趋势、
 热门页面、来源、国家/地区、设备、浏览器、操作系统和 UTM 来源。
 
 ## 为什么基于 Cloudflare
@@ -30,6 +30,7 @@ EdgeTrail 提供一套运行在 Cloudflare 上的小型分析系统：
 - **Workers** 运行 Web 应用、collector 和 queue consumer。
 - **D1** 存储用户、组织、站点、分享链接、每日汇总、归档元数据和已处理事件 ID。
 - **Workers Analytics Engine** 存储可查询的事件流，用于仪表盘报表。
+- **Durable Objects** 维护可 hibernation 的 WebSocket 连接，用于实时在线人数。
 - **Queues** 把事件接收和汇总/归档任务解耦。
 - **R2** 存储清理后的事件归档。
 
@@ -57,7 +58,7 @@ EdgeTrail 的默认设计是隐私优先：
 ```txt
 apps/
   web/                运行在 Cloudflare Workers 上的 TanStack Start 控制台
-  collector-worker/   Hono collector，提供 /script.js、/collect 和 /health
+  collector-worker/   Hono collector，提供 /script.js、/collect、/presence 和 /health
   queue-worker/       Cloudflare Queue consumer，负责 D1 汇总和 R2 归档
 
 packages/
@@ -75,14 +76,17 @@ packages/
 访客浏览器
   -> 从 collector-worker 加载 /script.js
   -> 把 pageview 或 custom_event 发送到 /collect
+  -> 通过 /presence 打开可 hibernation 的 WebSocket
   -> collector 校验站点、来源、域名和 payload
   -> collector 清理数据并哈希敏感值
   -> collector 写入 Workers Analytics Engine datapoint
   -> collector 把清理后的事件发送到队列
+  -> collector 把 presence 连接路由到按站点划分的 Durable Object
   -> queue-worker 对事件去重
   -> queue-worker 更新 D1 每日汇总
   -> queue-worker 把 NDJSON 归档写入 R2
   -> web 控制台在服务端查询 Workers Analytics Engine
+  -> 私有仪表盘通过 WebSocket 观察实时在线状态
 ```
 
 ## 运行要求
@@ -98,6 +102,24 @@ packages/
 
 仓库中提交的 `wrangler.jsonc` 使用的是公开占位资源名。真实资源名、资源 ID、API
 token、OAuth secret 和本地状态文件都必须留在 git 之外。
+
+## 配置边界
+
+本地/测试和生产配置必须分层保存：
+
+| 层级 | 文件或存储位置 | 用途 |
+| --- | --- | --- |
+| 已提交模板 | `wrangler.jsonc`、`.dev.vars.example` | 公开 binding 结构、必需 secret 名称、localhost 默认值和生产 binding 占位符。 |
+| 本地运行 | `wrangler.local.jsonc`、`.dev.vars` | 被 git 忽略的本地/测试资源、localhost URL 和本地/测试 secret。 |
+| 生产运行 | Cloudflare Worker secrets 和 `env.production` bindings | 真实生产 OAuth 凭证、API token、资源 ID 和生产 origin。 |
+
+Google OAuth 要使用两个 client：本地/测试 client 授权：
+
+- Authorized JavaScript origin: `http://localhost:3000`
+- Authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+
+生产 client 只授权已部署控制台的生产 origin 和 callback。不要把生产 OAuth client secret
+复制到本地 `.dev.vars`。
 
 ## 本地启动
 
@@ -121,7 +143,10 @@ cp apps/collector-worker/wrangler.jsonc apps/collector-worker/wrangler.local.jso
 cp apps/queue-worker/wrangler.jsonc apps/queue-worker/wrangler.local.jsonc
 ```
 
-然后把这些本地文件里的占位资源名和 ID 替换成你自己的开发资源。
+然后把这些被 git 忽略的本地文件里的占位资源名和 ID 替换成你自己的开发或测试资源。
+本地资源名应保持明显的 local 命名，例如 `edgetrail-local`、`edgetrail-events-local`
+和 `edgetrail-archive-local`。对于本地实时在线状态，collector 的 `DASHBOARD_ORIGIN`
+应指向 Web 开发地址，通常是 `http://localhost:3000`。
 
 复制本地 secret 示例：
 
@@ -133,11 +158,11 @@ cp apps/collector-worker/.dev.vars.example apps/collector-worker/.dev.vars
 Web 应用需要填写：
 
 - `BETTER_AUTH_SECRET`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+- 来自本地/测试 OAuth client 的 `GOOGLE_CLIENT_ID`
+- 来自本地/测试 OAuth client 的 `GOOGLE_CLIENT_SECRET`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
-- `WAE_DATASET`
+- 本地或测试 Workers Analytics Engine dataset 的 `WAE_DATASET`
 
 Collector 需要填写：
 
@@ -197,6 +222,9 @@ i18n、API 权限和仪表盘 view-model 测试。
 如果要部署你自己的版本，需要先创建真实 Cloudflare 资源，在私有部署配置中替换生产
 binding 占位符，设置 Wrangler secrets，应用生产 D1 migrations，并在你自己的账号里验证
 从 collector 到 dashboard 的完整链路。
+
+生产 secret 必须设置到 production Worker 环境，不能写进本地文件。例如生产环境的
+secret 命令需要带 `--env production`。
 
 不要提交：
 

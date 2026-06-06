@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   collectPayloadSchema,
+  PRESENCE_ENDPOINT,
+  presenceRoleSchema,
+  presenceSnapshotSchema,
   queueEventMessageSchema,
   redactObject,
   resolvePresetRange,
@@ -81,5 +84,26 @@ describe("shared contracts", () => {
     const range = resolvePresetRange("7d", new Date("2026-06-05T10:00:00.000Z"));
     expect(range.start.toISOString()).toBe("2026-05-30T00:00:00.000Z");
     expect(range.end.toISOString()).toBe("2026-06-06T00:00:00.000Z");
+  });
+
+  it("locks the realtime presence public contract", () => {
+    expect(PRESENCE_ENDPOINT).toBe("/presence");
+    expect(presenceRoleSchema.parse("tracker")).toBe("tracker");
+    expect(presenceRoleSchema.parse("dashboard")).toBe("dashboard");
+    expect(
+      presenceSnapshotSchema.parse({
+        type: "presence",
+        online: 2,
+        tracked: 2,
+        dashboards: 1,
+        updatedAt: "2026-06-06T00:00:00.000Z",
+      }),
+    ).toEqual({
+      type: "presence",
+      online: 2,
+      tracked: 2,
+      dashboards: 1,
+      updatedAt: "2026-06-06T00:00:00.000Z",
+    });
   });
 });

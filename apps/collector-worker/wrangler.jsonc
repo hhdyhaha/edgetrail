@@ -11,6 +11,23 @@
   "secrets": {
     "required": ["HASH_SECRET"]
   },
+  "vars": {
+    "DASHBOARD_ORIGIN": "http://localhost:3000"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PRESENCE_ROOMS",
+        "class_name": "PresenceRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1_presence_rooms",
+      "new_sqlite_classes": ["PresenceRoom"]
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
@@ -37,6 +54,17 @@
       "name": "your-edgetrail-collector",
       "secrets": {
         "required": ["HASH_SECRET"]
+      },
+      "vars": {
+        "DASHBOARD_ORIGIN": "https://your-edgetrail-web.example.com"
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "PRESENCE_ROOMS",
+            "class_name": "PresenceRoom"
+          }
+        ]
       },
       "d1_databases": [
         {

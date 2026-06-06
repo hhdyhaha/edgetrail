@@ -146,6 +146,7 @@ describe("web API permission and public surface", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       site: { id: "site_1", public_site_id: "pub_1", organization_id: "org_1" },
+      collectorOrigin: "http://localhost:8787",
       domains: [],
       shareLinks: [{ id: "share_1", token: "share_token", enabled: 1 }],
       trackingScript:

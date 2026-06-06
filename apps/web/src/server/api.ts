@@ -135,6 +135,7 @@ async function handleSites(ctx: ApiContext, user: SessionUser): Promise<Response
   if (ctx.parts.length === 2 && ctx.method === "GET") {
     return json({
       site,
+      collectorOrigin: collectorOrigin(),
       domains: await listSiteDomains(env.DB, siteId),
       shareLinks: await listShareLinksForSite(env.DB, siteId),
       trackingScript: trackingScript(site.public_site_id),
@@ -298,8 +299,12 @@ function analyticsKindFromPath(value: string | undefined) {
 }
 
 function trackingScript(publicSiteId: string): string {
-  const origin = env.COLLECTOR_ORIGIN || "https://collect.example.com";
+  const origin = collectorOrigin();
   return `<script defer src="${origin}/script.js" data-site="${publicSiteId}"></script>`;
+}
+
+function collectorOrigin(): string {
+  return env.COLLECTOR_ORIGIN || "https://collect.example.com";
 }
 
 function json(data: unknown, status = 200): Response {

@@ -14,6 +14,8 @@ pnpm dev
 
 Local development is the test environment. Keep `.dev.vars` on localhost/test
 OAuth credentials and use the top-level bindings in `wrangler.jsonc`.
+The local Google OAuth client must allow `http://localhost:3000` and
+`http://localhost:3000/api/auth/callback/google`.
 
 Production values live under `env.production` in `wrangler.jsonc` and in
 Cloudflare Worker secrets. The committed production resource names and IDs are

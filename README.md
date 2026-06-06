@@ -17,13 +17,14 @@ EdgeTrail gives you a small analytics stack that runs on Cloudflare:
   domains, copy the tracking script, and view analytics.
 - A tiny browser tracker served from your own collector worker.
 - A collector worker that validates incoming events, removes risky data, writes
-  analytics rows, and sends sanitized events to a queue.
+  analytics rows, sends sanitized events to a queue, and maintains realtime
+  presence through Durable Objects.
 - A queue worker that updates daily D1 rollups and archives event batches to R2
   as NDJSON.
 - Private dashboards for signed-in users and optional read-only public share
   links.
 
-The dashboard currently shows pageviews, approximate visitors, approximate
+The dashboard currently shows online visitors, pageviews, approximate visitors, approximate
 visits, views per visit, traffic over time, top pages, referrers, countries,
 devices, browsers, operating systems, and UTM sources.
 
@@ -36,6 +37,8 @@ The project is designed around Cloudflare-native services:
   metadata, and processed queue event IDs.
 - **Workers Analytics Engine** stores the queryable event stream for dashboard
   reports.
+- **Durable Objects** keep hibernatable WebSocket connections for realtime
+  online counts.
 - **Queues** decouple event collection from rollup and archive work.
 - **R2** stores sanitized event archives.
 
@@ -65,7 +68,7 @@ privacy-preserving event model and Workers Analytics Engine queries.
 ```txt
 apps/
   web/                TanStack Start dashboard on Cloudflare Workers
-  collector-worker/   Hono collector for /script.js, /collect, and /health
+  collector-worker/   Hono collector for /script.js, /collect, /presence, and /health
   queue-worker/       Cloudflare Queue consumer for D1 rollups and R2 archives
 
 packages/
@@ -83,14 +86,17 @@ packages/
 Visitor browser
   -> loads /script.js from collector-worker
   -> sends pageview or custom_event to /collect
+  -> opens /presence as a hibernatable WebSocket
   -> collector validates site, origin, domain, and payload
   -> collector sanitizes and hashes sensitive values
   -> collector writes a datapoint to Workers Analytics Engine
   -> collector enqueues the sanitized event
+  -> collector routes presence connections to a per-site Durable Object
   -> queue-worker deduplicates the event
   -> queue-worker updates D1 daily rollups
   -> queue-worker writes NDJSON archives to R2
   -> web dashboard queries Workers Analytics Engine server-side
+  -> private dashboard observes realtime presence over WebSocket
 ```
 
 ## Requirements
@@ -107,6 +113,24 @@ Visitor browser
 This repository uses public placeholder Cloudflare resource names in committed
 `wrangler.jsonc` files. Real resource names, resource IDs, API tokens, OAuth
 secrets, and local state must stay outside git.
+
+## Configuration Boundary
+
+Keep local/test and production configuration in separate layers:
+
+| Layer | Files or storage | Purpose |
+| --- | --- | --- |
+| Committed templates | `wrangler.jsonc`, `.dev.vars.example` | Public binding shape, required secret names, localhost defaults, and placeholder production bindings. |
+| Local runtime | `wrangler.local.jsonc`, `.dev.vars` | Ignored files for local or staging resources, localhost URLs, and local/test secrets. |
+| Production runtime | Cloudflare Worker secrets and `env.production` bindings | Real production OAuth credentials, API tokens, resource IDs, and production origins. |
+
+For Google OAuth, use one OAuth client for local/test with:
+
+- Authorized JavaScript origin: `http://localhost:3000`
+- Authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+
+Use a separate production OAuth client for the deployed dashboard origin and
+callback. Do not copy production OAuth client secrets into local `.dev.vars`.
 
 ## Local Setup
 
@@ -130,8 +154,12 @@ cp apps/collector-worker/wrangler.jsonc apps/collector-worker/wrangler.local.jso
 cp apps/queue-worker/wrangler.jsonc apps/queue-worker/wrangler.local.jsonc
 ```
 
-Then replace the placeholder resource names and IDs in those local files with
-your own development resources.
+Then replace the placeholder resource names and IDs in those ignored local
+files with your own development or staging resources. Keep local names visibly
+local, for example `edgetrail-local`, `edgetrail-events-local`, and
+`edgetrail-archive-local`. For local realtime presence, keep the collector
+`DASHBOARD_ORIGIN` pointed at the web dev origin, usually
+`http://localhost:3000`.
 
 Create local secrets from the examples:
 
@@ -143,11 +171,11 @@ cp apps/collector-worker/.dev.vars.example apps/collector-worker/.dev.vars
 Fill the web app secrets:
 
 - `BETTER_AUTH_SECRET`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_CLIENT_ID` from the local/test OAuth client
+- `GOOGLE_CLIENT_SECRET` from the local/test OAuth client
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
-- `WAE_DATASET`
+- `WAE_DATASET` for a local or staging Workers Analytics Engine dataset
 
 Fill the collector secret:
 
@@ -211,6 +239,10 @@ Before deploying your own copy, create real Cloudflare resources, replace the
 placeholder production bindings in private deployment config, set Wrangler
 secrets, apply production D1 migrations, and verify the full collector to
 dashboard flow in your own account.
+
+Production secrets must be set on the production Worker environment, not in
+local files. For example, run secret commands with `--env production` for the
+production environment.
 
 Do not commit:
 

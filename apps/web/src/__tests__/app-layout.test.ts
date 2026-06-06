@@ -8,6 +8,7 @@ import indexRouteSource from "../routes/index.tsx?raw";
 import loginRouteSource from "../routes/login.tsx?raw";
 import shareRouteSource from "../routes/share.$token.tsx?raw";
 import serverSource from "../server.ts?raw";
+import analyticsDashboardSource from "../ui/analytics-dashboard.tsx?raw";
 import appShellSource from "../ui/app-shell.tsx?raw";
 
 describe("authenticated app layout route", () => {
@@ -71,5 +72,14 @@ describe("localized routing shell", () => {
     expect(shareRouteSource).toContain("getPublicShareAvailability");
     expect(shareRouteSource).toContain("share.available");
     expect(shareRouteSource).toContain("analytics_share_not_found");
+  });
+
+  it("keeps realtime presence scoped to private site dashboards", () => {
+    expect(analyticsDashboardSource).toContain("buildPresenceWebSocketUrl");
+    expect(analyticsDashboardSource).toContain("parsePresenceSnapshot");
+    expect(analyticsDashboardSource).toContain("analytics_online_now");
+    expect(analyticsDashboardSource).toContain('scope.mode !== "private"');
+    expect(analyticsDashboardSource).toContain("!target");
+    expect(analyticsDashboardSource).toContain('status: "unavailable"');
   });
 });

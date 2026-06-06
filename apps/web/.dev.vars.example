@@ -1,6 +1,7 @@
+# Local/test only. Do not paste production OAuth or Cloudflare secrets here.
 BETTER_AUTH_SECRET="replace-with-better-auth-secret"
-GOOGLE_CLIENT_ID="replace-with-google-oauth-client-id"
-GOOGLE_CLIENT_SECRET="replace-with-google-oauth-client-secret"
+GOOGLE_CLIENT_ID="replace-with-local-google-oauth-client-id"
+GOOGLE_CLIENT_SECRET="replace-with-local-google-oauth-client-secret"
 CLOUDFLARE_ACCOUNT_ID="replace-with-cloudflare-account-id"
 CLOUDFLARE_API_TOKEN="replace-with-cloudflare-api-token"
-WAE_DATASET="your_web_analytics_events"
+WAE_DATASET="replace-with-local-or-staging-wae-dataset"

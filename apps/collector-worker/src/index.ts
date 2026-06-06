@@ -1,3 +1,4 @@
+import { DurableObject } from "cloudflare:workers";
 import {
   getPath,
   getReferrerDomain,
@@ -9,6 +10,10 @@ import {
   COLLECT_ENDPOINT,
   type CollectPayload,
   collectPayloadSchema,
+  PRESENCE_ENDPOINT,
+  type PresenceRole,
+  type PresenceSnapshot,
+  presenceRoleSchema,
   type QueueEventMessage,
   queueEventMessageSchema,
   redactObject,
@@ -23,6 +28,8 @@ type CollectorBindings = {
   ANALYTICS: AnalyticsEngineDataset;
   EVENT_QUEUE: Queue<QueueEventMessage>;
   HASH_SECRET: string;
+  DASHBOARD_ORIGIN?: string;
+  PRESENCE_ROOMS: DurableObjectNamespace<PresenceRoom>;
 };
 
 type CollectorEnv = {
@@ -55,6 +62,42 @@ app.options(COLLECT_ENDPOINT, async (c) => {
     return c.body(null, 403);
   }
   return c.body(null, 204, corsHeaders(origin));
+});
+
+app.get(PRESENCE_ENDPOINT, async (c) => {
+  if ((c.req.header("Upgrade") ?? "").toLowerCase() !== "websocket") {
+    return c.json({ error: "websocket_required" }, 426);
+  }
+
+  const url = new URL(c.req.url);
+  const publicSiteId = url.searchParams.get("site") ?? "";
+  const role = presenceRoleSchema.safeParse(url.searchParams.get("role"));
+  if (!publicSiteId || !role.success) {
+    return c.json({ error: "invalid_presence_request" }, 400);
+  }
+
+  const siteConfig = await getCachedSiteConfig(c.env, publicSiteId);
+  if (!siteConfig) {
+    return c.json({ error: "unknown_site" }, 404);
+  }
+  if (siteConfig.status !== "active") {
+    return c.json({ error: "site_disabled" }, 403);
+  }
+
+  const origin = c.req.header("Origin") ?? "";
+  if (
+    !isAllowedPresenceOrigin({
+      allowedDomains: siteConfig.allowedDomains,
+      dashboardOrigin: c.env.DASHBOARD_ORIGIN,
+      origin,
+      role: role.data,
+    })
+  ) {
+    return c.json({ error: "invalid_origin" }, 403);
+  }
+
+  const room = c.env.PRESENCE_ROOMS.getByName(siteConfig.publicSiteId);
+  return room.fetch(c.req.raw);
 });
 
 app.post(COLLECT_ENDPOINT, async (c) => {
@@ -177,6 +220,23 @@ export function isAllowedOrigin(origin: string, allowedDomains: string[]): boole
   }
 }
 
+export function isAllowedPresenceOrigin({
+  allowedDomains,
+  dashboardOrigin,
+  origin,
+  role,
+}: {
+  allowedDomains: string[];
+  dashboardOrigin?: string;
+  origin: string;
+  role: PresenceRole;
+}): boolean {
+  if (role === "tracker") {
+    return isAllowedOrigin(origin, allowedDomains);
+  }
+  return Boolean(dashboardOrigin && sameOrigin(origin, dashboardOrigin));
+}
+
 export async function getCachedSiteConfig(
   env: Pick<CollectorBindings, "DB">,
   publicSiteId: string,
@@ -247,6 +307,145 @@ function corsHeaders(origin: string): Record<string, string> {
     "Access-Control-Allow-Origin": origin,
     Vary: "Origin",
   };
+}
+
+type PresenceSocketAttachment = {
+  role: PresenceRole;
+  path: string;
+  connectedAt: number;
+};
+
+type PresenceSocket = Pick<WebSocket, "deserializeAttachment" | "readyState">;
+
+const presencePingText = JSON.stringify({ type: "ping" });
+const presencePongText = JSON.stringify({ type: "pong" });
+
+export class PresenceRoom extends DurableObject<CollectorBindings> {
+  constructor(ctx: DurableObjectState, env: CollectorBindings) {
+    super(ctx, env);
+    this.ctx.setWebSocketAutoResponse(
+      new WebSocketRequestResponsePair(presencePingText, presencePongText),
+    );
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    if ((request.headers.get("Upgrade") ?? "").toLowerCase() !== "websocket") {
+      return Response.json({ error: "websocket_required" }, { status: 426 });
+    }
+
+    const url = new URL(request.url);
+    const role = presenceRoleSchema.safeParse(url.searchParams.get("role"));
+    if (!role.success) {
+      return Response.json({ error: "invalid_presence_role" }, { status: 400 });
+    }
+
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
+    const attachment: PresenceSocketAttachment = {
+      connectedAt: Date.now(),
+      path: normalizePresencePath(url.searchParams.get("path")),
+      role: role.data,
+    };
+
+    server.serializeAttachment(attachment);
+    this.ctx.acceptWebSocket(server, [`role:${role.data}`]);
+    this.broadcastPresence();
+
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  async webSocketMessage(ws: WebSocket, message: ArrayBuffer | string): Promise<void> {
+    if (typeof message !== "string") {
+      return;
+    }
+    if (message === presencePingText || safeJsonType(message) === "ping") {
+      ws.send(presencePongText);
+    }
+  }
+
+  async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
+    void ws;
+    void code;
+    void reason;
+    this.broadcastPresence();
+  }
+
+  async webSocketError(ws: WebSocket): Promise<void> {
+    try {
+      ws.close(1011, "presence_error");
+    } catch {}
+    this.broadcastPresence();
+  }
+
+  private broadcastPresence(): void {
+    const payload = JSON.stringify(buildPresenceSnapshot(this.ctx.getWebSockets()));
+    for (const ws of this.ctx.getWebSockets("role:dashboard")) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+      }
+    }
+  }
+}
+
+export function buildPresenceSnapshot(
+  sockets: Iterable<PresenceSocket>,
+  now = new Date(),
+): PresenceSnapshot {
+  let tracked = 0;
+  let dashboards = 0;
+  for (const socket of sockets) {
+    if (socket.readyState !== WebSocket.OPEN) {
+      continue;
+    }
+    const role = presenceRoleFromSocket(socket);
+    if (role === "tracker") {
+      tracked += 1;
+    } else if (role === "dashboard") {
+      dashboards += 1;
+    }
+  }
+  return {
+    dashboards,
+    online: tracked,
+    tracked,
+    type: "presence",
+    updatedAt: now.toISOString(),
+  };
+}
+
+function presenceRoleFromSocket(socket: PresenceSocket): PresenceRole | null {
+  try {
+    const attachment = socket.deserializeAttachment() as Partial<PresenceSocketAttachment> | null;
+    const parsed = presenceRoleSchema.safeParse(attachment?.role);
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizePresencePath(value: string | null): string {
+  const path = value?.trim() || "/";
+  return path.startsWith("/") ? path.slice(0, 512) : `/${path.slice(0, 511)}`;
+}
+
+function safeJsonType(value: string): string | null {
+  try {
+    const parsed = JSON.parse(value) as { type?: unknown };
+    return typeof parsed.type === "string" ? parsed.type : null;
+  } catch {
+    return null;
+  }
+}
+
+function sameOrigin(origin: string, allowedOrigin: string): boolean {
+  if (!origin) {
+    return false;
+  }
+  try {
+    return new URL(origin).origin === new URL(allowedOrigin).origin;
+  } catch {
+    return false;
+  }
 }
 
 app.onError((error, c) => {

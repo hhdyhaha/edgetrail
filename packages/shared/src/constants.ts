@@ -34,3 +34,4 @@ export const DIMENSIONS = [
 export const TRACKER_GLOBAL = "edgeTrail";
 
 export const COLLECT_ENDPOINT = "/collect";
+export const PRESENCE_ENDPOINT = "/presence";

@@ -18,6 +18,7 @@ import {
   formatDecimal,
   formatInteger,
 } from "#/lib/analytics-view-model";
+import { buildPresenceWebSocketUrl, parsePresenceSnapshot } from "#/lib/presence";
 import { m } from "#/paraglide/messages";
 
 type AnalyticsScope =
@@ -48,6 +49,16 @@ type LoadState =
   | { status: "ready"; data: AnalyticsData }
   | { status: "error"; error: string; data?: AnalyticsData };
 
+type PresenceState =
+  | { status: "connecting"; online: number; updatedAt?: string }
+  | { status: "ready"; online: number; updatedAt: string }
+  | { status: "unavailable"; online: number; updatedAt?: string };
+
+type SiteDetailsPayload = {
+  collectorOrigin?: string;
+  site?: { public_site_id?: string };
+};
+
 const analyticsKinds = [
   "summary",
   "timeseries",
@@ -59,7 +70,9 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
   const [customStart, setCustomStart] = useState(() => recentIsoDate(7));
   const [customEnd, setCustomEnd] = useState(() => recentIsoDate(0));
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [presence, setPresence] = useState<PresenceState>({ status: "connecting", online: 0 });
   const basePath = analyticsBasePath(scope);
+  const privateSiteId = scope.mode === "private" ? scope.siteId : "";
 
   const query = useMemo(() => {
     if (preset !== "custom") {
@@ -87,6 +100,66 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
 
     return () => controller.abort();
   }, [basePath, query]);
+
+  useEffect(() => {
+    if (scope.mode !== "private") {
+      return;
+    }
+
+    let closed = false;
+    let socket: WebSocket | null = null;
+    setPresence((current) => ({ status: "connecting", online: current.online }));
+
+    void loadPresenceTarget(privateSiteId)
+      .then((target) => {
+        if (closed) {
+          return;
+        }
+        if (!target) {
+          setPresence((current) => ({ ...current, status: "unavailable" }));
+          return;
+        }
+        socket = new WebSocket(
+          buildPresenceWebSocketUrl({
+            collectorOrigin: target.collectorOrigin,
+            path: window.location.pathname,
+            publicSiteId: target.publicSiteId,
+            role: "dashboard",
+          }),
+        );
+        socket.onopen = () => {
+          socket?.send(JSON.stringify({ type: "ping" }));
+        };
+        socket.onmessage = (event) => {
+          const snapshot = parsePresenceSnapshot(safeJson(event.data));
+          if (snapshot) {
+            setPresence({
+              online: snapshot.online,
+              status: "ready",
+              updatedAt: snapshot.updatedAt,
+            });
+          }
+        };
+        socket.onerror = () => {
+          setPresence((current) => ({ ...current, status: "unavailable" }));
+        };
+        socket.onclose = () => {
+          if (!closed) {
+            setPresence((current) => ({ ...current, status: "unavailable" }));
+          }
+        };
+      })
+      .catch(() => {
+        if (!closed) {
+          setPresence((current) => ({ ...current, status: "unavailable" }));
+        }
+      });
+
+    return () => {
+      closed = true;
+      socket?.close();
+    };
+  }, [privateSiteId, scope.mode]);
 
   const data = state.data ?? emptyAnalyticsData();
   const summary = buildSummaryMetrics(data.summary);
@@ -152,7 +225,21 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
 
       {state.status === "error" ? <AnalyticsError message={state.error} /> : null}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <div
+        className={
+          scope.mode === "private"
+            ? "mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-5"
+            : "mt-6 grid gap-4 md:grid-cols-4"
+        }
+      >
+        {scope.mode === "private" ? (
+          <MetricCard
+            label={m.analytics_online_now()}
+            note={presenceNote(presence)}
+            tone="green"
+            value={formatInteger(presence.online)}
+          />
+        ) : null}
         <MetricCard
           label={m.analytics_visitors()}
           note={m.analytics_privacy_first_approximate()}
@@ -320,6 +407,23 @@ async function loadAnalytics(
   return data;
 }
 
+async function loadPresenceTarget(
+  siteId: string,
+): Promise<{ collectorOrigin: string; publicSiteId: string } | null> {
+  const response = await fetch(`/api/sites/${siteId}`);
+  if (!response.ok) {
+    return null;
+  }
+  const payload = (await response.json()) as SiteDetailsPayload;
+  if (!payload.collectorOrigin || !payload.site?.public_site_id) {
+    return null;
+  }
+  return {
+    collectorOrigin: payload.collectorOrigin,
+    publicSiteId: payload.site.public_site_id,
+  };
+}
+
 function analyticsBasePath(scope: AnalyticsScope): string {
   return scope.mode === "private" ? `/api/sites/${scope.siteId}` : `/api/public/${scope.token}`;
 }
@@ -358,6 +462,27 @@ function errorMessage(message: string): string {
     return m.analytics_sign_in_required();
   }
   return m.analytics_query_failed();
+}
+
+function presenceNote(state: PresenceState): string {
+  if (state.status === "unavailable") {
+    return m.analytics_presence_unavailable();
+  }
+  if (state.status === "connecting") {
+    return m.analytics_presence_connecting();
+  }
+  return m.analytics_realtime_connections();
+}
+
+function safeJson(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return null;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 function recentIsoDate(daysAgo: number): string {

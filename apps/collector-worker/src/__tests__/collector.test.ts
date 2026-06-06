@@ -3,6 +3,7 @@ import app, {
   clearSiteConfigCache,
   isAllowedOrigin,
   normalizeUserAgent,
+  type PresenceRoom,
   sanitizeCollectPayload,
 } from "../index";
 
@@ -49,13 +50,25 @@ function createEnv() {
   return {
     DB: db,
     ANALYTICS: { writeDataPoint: vi.fn() } as unknown as AnalyticsEngineDataset,
+    DASHBOARD_ORIGIN: "https://dashboard.example.com",
     EVENT_QUEUE: { send: vi.fn(() => Promise.resolve()) } as unknown as Queue,
     HASH_SECRET: "test-secret",
+    PRESENCE_ROOMS: {
+      getByName: vi.fn(() => ({
+        fetch: vi.fn(() => Response.json({ forwarded: true })),
+      })),
+    } as unknown as DurableObjectNamespace<PresenceRoom>,
   };
 }
 
 describe("collector worker", () => {
   beforeEach(() => {
+    siteRows[0] = {
+      id: "site_1",
+      primary_domain: "example.com",
+      public_site_id: "pub_1",
+      status: "active",
+    };
     clearSiteConfigCache();
   });
 
@@ -81,6 +94,100 @@ describe("collector worker", () => {
 
     expect(response.status).toBe(204);
     expect(response.headers.get("Access-Control-Allow-Headers")).toContain("x-edgetrail-site");
+  });
+
+  it("rejects non-WebSocket presence requests before touching Durable Objects", async () => {
+    const env = createEnv();
+    const response = await request(
+      "http://collector.test/presence?site=pub_1&role=tracker",
+      {
+        headers: {
+          Origin: "https://example.com",
+        },
+      },
+      env,
+    );
+
+    expect(response.status).toBe(426);
+    expect(env.PRESENCE_ROOMS.getByName).not.toHaveBeenCalled();
+  });
+
+  it("forwards valid tracker presence upgrades to the site Durable Object", async () => {
+    const env = createEnv();
+    const response = await request(
+      "http://collector.test/presence?site=pub_1&path=%2Fpricing&role=tracker",
+      {
+        headers: {
+          Origin: "https://example.com",
+          Upgrade: "websocket",
+        },
+      },
+      env,
+    );
+
+    expect(response.status).toBe(200);
+    expect(env.PRESENCE_ROOMS.getByName).toHaveBeenCalledWith("pub_1");
+  });
+
+  it("rejects tracker presence upgrades from origins outside the site allowlist", async () => {
+    const response = await request(
+      "http://collector.test/presence?site=pub_1&role=tracker",
+      {
+        headers: {
+          Origin: "https://evil.test",
+          Upgrade: "websocket",
+        },
+      },
+      createEnv(),
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("allows dashboard presence only from the configured dashboard origin", async () => {
+    const env = createEnv();
+    const response = await request(
+      "http://collector.test/presence?site=pub_1&role=dashboard",
+      {
+        headers: {
+          Origin: "https://dashboard.example.com",
+          Upgrade: "websocket",
+        },
+      },
+      env,
+    );
+
+    expect(response.status).toBe(200);
+    expect(env.PRESENCE_ROOMS.getByName).toHaveBeenCalledWith("pub_1");
+  });
+
+  it("rejects unknown or disabled sites for presence", async () => {
+    const unknown = await request(
+      "http://collector.test/presence?site=missing&role=tracker",
+      {
+        headers: {
+          Origin: "https://example.com",
+          Upgrade: "websocket",
+        },
+      },
+      createEnv(),
+    );
+    expect(unknown.status).toBe(404);
+
+    siteRows[0] = { ...siteRows[0], status: "deleted" };
+    clearSiteConfigCache();
+    const disabled = await request(
+      "http://collector.test/presence?site=pub_1&role=tracker",
+      {
+        headers: {
+          Origin: "https://example.com",
+          Upgrade: "websocket",
+        },
+      },
+      createEnv(),
+    );
+    expect(disabled.status).toBe(403);
+    siteRows[0] = { ...siteRows[0], status: "active" };
   });
 
   it("returns 204 and writes WAE plus queue for a valid collect request", async () => {
