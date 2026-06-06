@@ -1,6 +1,7 @@
 import { Badge, Button, Card } from "@edgetrail/ui";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { m } from "#/paraglide/messages";
 import { AppShell } from "#/ui/app-shell";
 
 type Organization = {
@@ -22,14 +23,10 @@ function NewSitePage() {
   }, []);
 
   return (
-    <AppShell
-      active="Sites"
-      subtitle="Add an allowed domain and generate a tracking script."
-      title="Create site"
-    >
+    <AppShell active="Sites" subtitle={m.site_new_subtitle()} title={m.site_new_title()}>
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1fr]">
         <Card>
-          <h2 className="text-xl font-bold">Site details</h2>
+          <h2 className="text-xl font-bold">{m.site_new_details()}</h2>
           <form
             className="mt-8 grid gap-6"
             onSubmit={(event) => {
@@ -59,7 +56,7 @@ function NewSitePage() {
           >
             <label className="grid gap-2">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Organization
+                {m.site_new_organization()}
               </span>
               <select
                 className="h-12 rounded-md border border-[#dee3ea] bg-white px-4 text-sm outline-none transition focus:border-[#ec7124] dark:border-slate-800 dark:bg-slate-950"
@@ -75,18 +72,18 @@ function NewSitePage() {
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Site name
+                {m.site_new_name()}
               </span>
               <input
                 className="h-12 rounded-md border border-[#dee3ea] bg-white px-4 text-sm outline-none transition focus:border-[#ec7124] dark:border-slate-800 dark:bg-slate-950"
                 name="name"
-                placeholder="Site name"
+                placeholder={m.site_new_name()}
                 required
               />
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Primary domain
+                {m.site_new_primary_domain()}
               </span>
               <input
                 className="h-12 rounded-md border border-[#dee3ea] bg-white px-4 text-sm outline-none transition focus:border-[#ec7124] dark:border-slate-800 dark:bg-slate-950"
@@ -96,9 +93,9 @@ function NewSitePage() {
               />
             </label>
             <div className="rounded-lg border border-orange-200 bg-[#fff5ee] p-5 dark:border-orange-900 dark:bg-orange-950/20">
-              <div className="text-sm font-bold">Domain validation</div>
+              <div className="text-sm font-bold">{m.site_new_domain_validation()}</div>
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                The collector accepts events only from allowed origins for this site.
+                {m.site_new_domain_validation_description()}
               </p>
             </div>
             {error ? (
@@ -107,18 +104,18 @@ function NewSitePage() {
               </div>
             ) : null}
             <div className="flex flex-wrap gap-3">
-              <Button type="submit">Create site</Button>
+              <Button type="submit">{m.site_new_create()}</Button>
             </div>
           </form>
         </Card>
 
         <Card>
-          <h2 className="text-xl font-bold">Install preview</h2>
+          <h2 className="text-xl font-bold">{m.site_new_install_preview()}</h2>
           <div className="mt-8 grid gap-8">
             {[
-              ["1", "Create site record", "D1 stores site metadata and allowed domain."],
-              ["2", "Copy tracking script", "A tiny script is generated for the public site id."],
-              ["3", "Verify first event", "Collector returns 204 and WAE starts receiving rows."],
+              ["1", m.site_new_step_create_title(), m.site_new_step_create_description()],
+              ["2", m.site_new_step_copy_title(), m.site_new_step_copy_description()],
+              ["3", m.site_new_step_verify_title(), m.site_new_step_verify_description()],
             ].map(([number, title, description]) => (
               <div className="flex gap-5" key={number}>
                 <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ec7124] bg-[#fff5ee] text-xs font-bold text-[#ec7124]">
@@ -134,13 +131,13 @@ function NewSitePage() {
             ))}
           </div>
           <div className="mt-12 rounded-lg border border-[#dee3ea] bg-[#fbfaf7] p-6 dark:border-slate-800 dark:bg-slate-900/30">
-            <div className="text-sm font-semibold">Tracking script</div>
+            <div className="text-sm font-semibold">{m.site_new_tracking_script()}</div>
             <div className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Generated after the site is created.
+              {m.site_new_generated_after_create()}
             </div>
           </div>
           <div className="mt-4">
-            <Badge tone="orange">Generated after create</Badge>
+            <Badge tone="orange">{m.site_new_generated_badge()}</Badge>
           </div>
         </Card>
       </div>

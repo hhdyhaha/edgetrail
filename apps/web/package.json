@@ -7,6 +7,10 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
+    "i18n:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy url baseLocale --output-structure message-modules --emit-ts-declarations",
+    "pretest": "pnpm run i18n:compile",
+    "pretypecheck": "pnpm run i18n:compile",
+    "prebuild": "pnpm run i18n:compile",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -42,6 +46,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
+    "@inlang/paraglide-js": "^2.18.1",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

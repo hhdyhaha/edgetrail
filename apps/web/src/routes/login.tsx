@@ -1,8 +1,11 @@
 import { Button, Card } from "@edgetrail/ui";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Chrome, Lock } from "lucide-react";
+import { LocaleSwitcher } from "#/i18n/locale-switcher";
 import { authClient } from "#/lib/auth-client";
 import { getSession } from "#/lib/auth-functions";
+import { m } from "#/paraglide/messages";
+import { getLocale, localizeHref } from "#/paraglide/runtime";
 import { ThemeToggle } from "#/ui/theme-toggle";
 
 export const Route = createFileRoute("/login")({
@@ -24,30 +27,33 @@ function LoginPage() {
             <div className="flex items-center gap-3">
               <span className="inline-flex h-7 w-7 rounded-md bg-[#ec7124]" />
               <div>
-                <div className="text-xl font-bold leading-5">EdgeTrail</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Cloudflare-native</div>
+                <div className="text-xl font-bold leading-5">{m.app_title()}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{m.app_tagline()}</div>
               </div>
             </div>
 
-            <h1 className="mt-16 text-4xl font-bold">Sign in</h1>
+            <h1 className="mt-16 text-4xl font-bold">{m.login_title()}</h1>
             <p className="mt-3 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">
-              Google OAuth is the only login method for this MVP. Analytics credentials stay on the
-              server side.
+              {m.login_description()}
             </p>
 
             <Button
               className="mt-8 w-full sm:w-80"
               onClick={() => {
-                void authClient.signIn.social({ provider: "google", callbackURL: "/app" });
+                void authClient.signIn.social({
+                  provider: "google",
+                  callbackURL: localizeHref("/app", { locale: getLocale() }),
+                });
               }}
             >
               <Chrome className="h-4 w-4" />
-              Continue with Google
+              {m.login_continue_google()}
             </Button>
           </section>
 
           <aside className="border-t border-[#dee3ea] bg-[#fbfaf7] p-8 dark:border-slate-800 dark:bg-slate-900/40 md:border-l md:border-t-0">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <LocaleSwitcher />
               <ThemeToggle />
             </div>
             <div className="mt-24 space-y-4">
@@ -56,13 +62,17 @@ function LoginPage() {
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                     <Lock className="h-4 w-4" />
                   </span>
-                  Server-side analytics access
+                  {m.login_server_access()}
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                  Cloudflare API tokens are never exposed to the browser.
+                  {m.login_token_safety()}
                 </p>
               </div>
-              {["No password accounts", "No raw IP storage", "No cookie tracking"].map((label) => (
+              {[
+                m.login_no_password(),
+                m.login_no_raw_ip_storage(),
+                m.login_no_cookie_tracking(),
+              ].map((label) => (
                 <div
                   className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"
                   key={label}

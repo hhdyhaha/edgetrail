@@ -1,3 +1,6 @@
+import { intlLocale } from "#/i18n/locale";
+import { m } from "#/paraglide/messages";
+
 export type AnalyticsRow = Record<string, unknown>;
 
 export type SummaryMetrics = {
@@ -29,14 +32,14 @@ export type DimensionRow = {
 };
 
 export const dimensionConfigs = [
-  { kind: "top-pages", title: "Top pages" },
-  { kind: "referrers", title: "Referrers" },
-  { kind: "countries", title: "Countries" },
-  { kind: "devices", title: "Devices" },
-  { kind: "browsers", title: "Browsers" },
-  { kind: "os", title: "Operating systems" },
-  { kind: "utm", title: "UTM source / medium / campaign" },
-] as const satisfies readonly { kind: DimensionKind; title: string }[];
+  { kind: "top-pages", title: m.dimension_top_pages },
+  { kind: "referrers", title: m.dimension_referrers },
+  { kind: "countries", title: m.dimension_countries },
+  { kind: "devices", title: m.dimension_devices },
+  { kind: "browsers", title: m.dimension_browsers },
+  { kind: "os", title: m.dimension_os },
+  { kind: "utm", title: m.dimension_utm },
+] as const satisfies readonly { kind: DimensionKind; title: () => string }[];
 
 export function buildSummaryMetrics(rows: unknown[] | undefined): SummaryMetrics {
   const row = asRow(rows?.[0]);
@@ -58,7 +61,7 @@ export function buildTimeseriesPoints(rows: unknown[] | undefined): TimeseriesPo
         const value = asRow(row);
         const timestampSeconds = toNumber(value.time_bucket);
         return {
-          label: timestampSeconds ? formatBucket(timestampSeconds) : "Unknown",
+          label: timestampSeconds ? formatBucket(timestampSeconds) : m.analytics_unknown(),
           pageviews: toNumber(value.pageviews),
           visitors: toNumber(value.approximate_visitors),
         };
@@ -86,37 +89,39 @@ export function buildDimensionRows(
 }
 
 export function formatInteger(value: number): string {
-  return new Intl.NumberFormat("en", { maximumFractionDigits: 0 }).format(Math.round(value));
+  return new Intl.NumberFormat(intlLocale(), { maximumFractionDigits: 0 }).format(
+    Math.round(value),
+  );
 }
 
 export function formatDecimal(value: number): string {
-  return new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(value);
+  return new Intl.NumberFormat(intlLocale(), { maximumFractionDigits: 2 }).format(value);
 }
 
 function dimensionLabel(kind: DimensionKind, row: AnalyticsRow): string {
   if (kind === "utm") {
     return [
-      stringValue(row.utmSource, "(none)"),
-      stringValue(row.utmMedium, "(none)"),
-      stringValue(row.utmCampaign, "(none)"),
+      stringValue(row.utmSource, m.analytics_none()),
+      stringValue(row.utmMedium, m.analytics_none()),
+      stringValue(row.utmCampaign, m.analytics_none()),
     ].join(" / ");
   }
   if (kind === "top-pages") {
     return stringValue(row.path, "/");
   }
   if (kind === "referrers") {
-    return stringValue(row.referrerDomain, "Direct / none");
+    return stringValue(row.referrerDomain, m.analytics_direct_none());
   }
   if (kind === "countries") {
-    return stringValue(row.country, "Unknown");
+    return stringValue(row.country, m.analytics_unknown());
   }
   if (kind === "devices") {
-    return stringValue(row.device, "Unknown");
+    return stringValue(row.device, m.analytics_unknown());
   }
   if (kind === "browsers") {
-    return stringValue(row.browser, "Unknown");
+    return stringValue(row.browser, m.analytics_unknown());
   }
-  return stringValue(row.os, "Unknown");
+  return stringValue(row.os, m.analytics_unknown());
 }
 
 function asRow(value: unknown): AnalyticsRow {
@@ -139,7 +144,7 @@ function stringValue(value: unknown, fallback: string): string {
 }
 
 function formatBucket(timestampSeconds: number): string {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(intlLocale(), {
     month: "short",
     day: "numeric",
     hour: "2-digit",

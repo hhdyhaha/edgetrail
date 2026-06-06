@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { BarChart3, Lock, Settings, ShieldCheck } from "lucide-react";
 import type * as React from "react";
+import { LocaleSwitcher } from "#/i18n/locale-switcher";
+import { m } from "#/paraglide/messages";
 import { ThemeToggle } from "./theme-toggle";
 
 type AppShellProps = {
@@ -18,8 +20,16 @@ export function AppShell({
   children,
   siteId,
   subtitle,
-  title = "Edge Analytics",
+  title = m.app_title(),
 }: AppShellProps) {
+  const pipelineItems = [
+    [m.app_shell_collector(), m.app_shell_live()],
+    [m.app_shell_queue(), m.app_shell_healthy()],
+    [m.app_shell_d1_rollup(), m.app_shell_17_sec()],
+    [m.app_shell_r2_archive(), m.app_shell_synced()],
+  ];
+  const privacyItems = [m.privacy_no_raw_ip(), m.privacy_no_raw_ua(), m.privacy_no_cookies()];
+
   return (
     <main className="min-h-screen bg-[#f7f6f2] text-[#181c23] dark:bg-slate-950 dark:text-slate-50">
       <div className="mx-auto grid max-w-[1480px] gap-6 px-4 py-5 lg:grid-cols-[238px_1fr] xl:px-6">
@@ -27,8 +37,8 @@ export function AppShell({
           <Link className="flex items-center gap-3" to="/app">
             <span className="inline-flex h-7 w-7 rounded-md bg-[#ec7124]" />
             <span>
-              <span className="block text-xl font-bold leading-5">Edge Analytics</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Cloudflare-native</span>
+              <span className="block text-xl font-bold leading-5">{m.app_title()}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{m.app_tagline()}</span>
             </span>
           </Link>
 
@@ -38,14 +48,14 @@ export function AppShell({
               icon={<BarChart3 className="h-4 w-4" />}
               to="/app"
             >
-              Overview
+              {m.nav_overview()}
             </NavItem>
             <NavItem
               active={active === "Sites"}
               icon={<Settings className="h-4 w-4" />}
               to="/app/sites"
             >
-              Sites
+              {m.nav_sites()}
             </NavItem>
             {siteId ? (
               <NavItem
@@ -54,20 +64,17 @@ export function AppShell({
                 params={{ siteId }}
                 to="/app/sites/$siteId/settings"
               >
-                Settings
+                {m.nav_settings()}
               </NavItem>
             ) : null}
           </nav>
 
           <div className="mt-10 border-t border-[#dee3ea] pt-7 dark:border-slate-800">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Pipeline</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {m.app_shell_pipeline()}
+            </div>
             <div className="mt-4 grid gap-5">
-              {[
-                ["Collector", "Live"],
-                ["Queue", "Healthy"],
-                ["D1 Rollup", "17 sec"],
-                ["R2 Archive", "synced"],
-              ].map(([label, value]) => (
+              {pipelineItems.map(([label, value]) => (
                 <div className="flex gap-3" key={label}>
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-emerald-600" />
                   <span>
@@ -81,10 +88,10 @@ export function AppShell({
 
           <div className="mt-auto pt-8">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Privacy guardrails
+              {m.app_shell_privacy_guardrails()}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {["No raw IP", "No raw UA", "No cookies"].map((label) => (
+              {privacyItems.map((label) => (
                 <span
                   className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                   key={label}
@@ -107,9 +114,10 @@ export function AppShell({
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
                 <Lock className="h-3 w-3" />
-                Cookie-free / no raw IP
+                {m.privacy_cookie_free_no_raw_ip()}
               </span>
               {action}
+              <LocaleSwitcher />
               <ThemeToggle />
             </div>
           </header>

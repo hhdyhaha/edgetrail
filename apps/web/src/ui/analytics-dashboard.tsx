@@ -18,6 +18,7 @@ import {
   formatDecimal,
   formatInteger,
 } from "#/lib/analytics-view-model";
+import { m } from "#/paraglide/messages";
 
 type AnalyticsScope =
   | {
@@ -96,23 +97,27 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-3">
           <label className="grid gap-1 text-sm">
-            <span className="font-semibold text-slate-600 dark:text-slate-300">Range</span>
+            <span className="font-semibold text-slate-600 dark:text-slate-300">
+              {m.analytics_range()}
+            </span>
             <select
               className="h-10 rounded-md border border-[#dee3ea] bg-white px-3 text-sm outline-none focus:border-[#ec7124] dark:border-slate-800 dark:bg-slate-950"
               onChange={(event) => setPreset(event.target.value as DatePreset)}
               value={preset}
             >
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="custom">Custom</option>
+              <option value="today">{m.analytics_today()}</option>
+              <option value="yesterday">{m.analytics_yesterday()}</option>
+              <option value="7d">{m.analytics_last_7_days()}</option>
+              <option value="30d">{m.analytics_last_30_days()}</option>
+              <option value="custom">{m.analytics_custom()}</option>
             </select>
           </label>
           {preset === "custom" ? (
             <>
               <label className="grid gap-1 text-sm">
-                <span className="font-semibold text-slate-600 dark:text-slate-300">Start</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-300">
+                  {m.analytics_start()}
+                </span>
                 <input
                   className="h-10 rounded-md border border-[#dee3ea] bg-white px-3 text-sm outline-none focus:border-[#ec7124] dark:border-slate-800 dark:bg-slate-950"
                   max={customEnd}
@@ -122,7 +127,9 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
                 />
               </label>
               <label className="grid gap-1 text-sm">
-                <span className="font-semibold text-slate-600 dark:text-slate-300">End</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-300">
+                  {m.analytics_end()}
+                </span>
                 <input
                   className="h-10 rounded-md border border-[#dee3ea] bg-white px-3 text-sm outline-none focus:border-[#ec7124] dark:border-slate-800 dark:bg-slate-950"
                   min={customStart}
@@ -139,7 +146,7 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
 
       {state.status === "loading" ? (
         <div className="mt-6 rounded-lg border border-[#dee3ea] bg-white p-4 text-sm font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-          Loading analytics...
+          {m.analytics_loading()}
         </div>
       ) : null}
 
@@ -147,26 +154,26 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
 
       <div className="mt-6 grid gap-4 md:grid-cols-4">
         <MetricCard
-          label="Visitors"
-          note="privacy-first approximate"
+          label={m.analytics_visitors()}
+          note={m.analytics_privacy_first_approximate()}
           tone="green"
           value={formatInteger(summary.visitors)}
         />
         <MetricCard
-          label="Pageviews"
-          note="all tracked views"
+          label={m.analytics_pageviews()}
+          note={m.analytics_all_tracked_views()}
           tone="orange"
           value={formatInteger(summary.pageviews)}
         />
         <MetricCard
-          label="Visits"
-          note="privacy-first approximate"
+          label={m.analytics_visits()}
+          note={m.analytics_privacy_first_approximate()}
           tone="blue"
           value={formatInteger(summary.visits)}
         />
         <MetricCard
-          label="Views per visit"
-          note="session quality"
+          label={m.analytics_views_per_visit()}
+          note={m.analytics_session_quality()}
           tone="purple"
           value={formatDecimal(summary.viewsPerVisit)}
         />
@@ -174,9 +181,9 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
 
       <Card className="mt-6 h-[22rem]">
         <div className="mb-4">
-          <h2 className="text-lg font-bold">Traffic over time</h2>
+          <h2 className="text-lg font-bold">{m.analytics_traffic_over_time()}</h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Pageviews and visitors from Workers Analytics Engine.
+            {m.analytics_traffic_description()}
           </p>
         </div>
         {timeseries.length > 0 ? (
@@ -202,7 +209,7 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <EmptyState label="No timeseries data for selected range." />
+          <EmptyState label={m.analytics_no_timeseries()} />
         )}
       </Card>
 
@@ -211,7 +218,7 @@ export function AnalyticsDashboard(scope: AnalyticsScope) {
           <DimensionTable
             key={config.kind}
             rows={buildDimensionRows(config.kind, data.dimensions[config.kind])}
-            title={config.title}
+            title={config.title()}
           />
         ))}
       </div>
@@ -230,20 +237,20 @@ function DimensionTable({
     <Card>
       <h2 className="text-lg font-bold">{title}</h2>
       {rows.length === 0 ? (
-        <EmptyState label="No data for selected range." />
+        <EmptyState label={m.analytics_no_data()} />
       ) : (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full table-fixed text-left text-sm">
             <thead className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="w-7/12 border-b border-[#dee3ea] py-2 pr-3 dark:border-slate-800">
-                  Dimension
+                  {m.analytics_dimension()}
                 </th>
                 <th className="w-3/12 border-b border-[#dee3ea] py-2 pr-3 text-right dark:border-slate-800">
-                  Pageviews
+                  {m.analytics_pageviews()}
                 </th>
                 <th className="w-2/12 border-b border-[#dee3ea] py-2 text-right dark:border-slate-800">
-                  Visitors
+                  {m.analytics_visitors()}
                 </th>
               </tr>
             </thead>
@@ -339,18 +346,18 @@ function emptyAnalyticsData(): AnalyticsData {
 
 function errorMessage(message: string): string {
   if (message === "missing_cloudflare_query_config") {
-    return "Missing server-side Cloudflare query configuration. Configure the analytics read credentials before WAE dashboard queries can run.";
+    return m.analytics_missing_cloudflare_config();
   }
   if (message === "range_exceeds_wae_retention") {
-    return "Selected range exceeds the Workers Analytics Engine retention window.";
+    return m.analytics_range_exceeds_retention();
   }
   if (message === "share_not_found") {
-    return "This share link is disabled or unavailable.";
+    return m.analytics_share_not_found();
   }
   if (message === "Unauthorized" || message === "401") {
-    return "Sign in is required before the private dashboard can load.";
+    return m.analytics_sign_in_required();
   }
-  return "Workers Analytics Engine query failed.";
+  return m.analytics_query_failed();
 }
 
 function recentIsoDate(daysAgo: number): string {

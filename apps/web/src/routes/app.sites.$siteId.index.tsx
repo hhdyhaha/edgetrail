@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { m } from "#/paraglide/messages";
 import { AnalyticsDashboard } from "#/ui/analytics-dashboard";
 import { AppShell } from "#/ui/app-shell";
 
@@ -15,12 +16,12 @@ function SiteDashboard() {
           params={{ siteId }}
           to="/app/sites/$siteId/settings"
         >
-          Settings
+          {m.nav_settings()}
         </Link>
       }
       siteId={siteId}
-      subtitle="Visitors and visits are privacy-first approximate metrics."
-      title="Site analytics"
+      subtitle={m.site_dashboard_subtitle()}
+      title={m.site_dashboard_title()}
     >
       <AnalyticsDashboard mode="private" siteId={siteId} />
     </AppShell>

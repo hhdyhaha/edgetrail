@@ -1,5 +1,7 @@
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import type * as React from "react";
+import { m } from "#/paraglide/messages";
+import { getLocale } from "#/paraglide/runtime";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -9,26 +11,23 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       {
         name: "description",
-        content: "Cloudflare-native, privacy-first web analytics for indie tools and SaaS sites.",
+        content: m.root_description(),
       },
-      { title: "EdgeTrail" },
-      { property: "og:title", content: "EdgeTrail" },
+      { title: m.app_title() },
+      { property: "og:title", content: m.app_title() },
       {
         property: "og:description",
-        content: "Self-hostable Cloudflare-native analytics with no cookies and no raw IP storage.",
+        content: m.root_og_description(),
       },
     ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: "/" },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootDocument,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: Small inline script applies persisted theme before CSS paints.

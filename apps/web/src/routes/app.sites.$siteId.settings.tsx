@@ -2,6 +2,8 @@ import { Badge, Button, Card } from "@edgetrail/ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Copy, Link2, Unlink } from "lucide-react";
 import { useEffect, useState } from "react";
+import { m } from "#/paraglide/messages";
+import { getLocale, localizeHref } from "#/paraglide/runtime";
 import { AppShell } from "#/ui/app-shell";
 
 type SiteDetails = {
@@ -25,7 +27,7 @@ function SiteSettings() {
       .then((nextDetails) => {
         setDetails(nextDetails);
         const activeShare = nextDetails.shareLinks?.find((link) => link.enabled === 1);
-        setShareUrl(activeShare ? `${location.origin}/share/${activeShare.token}` : "");
+        setShareUrl(activeShare ? localizedShareUrl(activeShare.token) : "");
       });
   };
 
@@ -35,15 +37,15 @@ function SiteSettings() {
     <AppShell
       active="Settings"
       siteId={siteId}
-      subtitle="Tracking script, allowed domains, and public share access."
-      title="Site settings"
+      subtitle={m.site_settings_subtitle()}
+      title={m.site_settings_title()}
     >
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">Tracking script</h2>
+            <h2 className="text-xl font-bold">{m.site_settings_tracking_script()}</h2>
             <button
-              aria-label="Copy tracking script"
+              aria-label={m.site_settings_copy_tracking_script()}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#dee3ea] text-slate-600 hover:bg-[#fff5ee] hover:text-[#ec7124] dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
               onClick={() => {
                 if (!details.trackingScript) {
@@ -63,11 +65,11 @@ function SiteSettings() {
             {details.trackingScript}
           </pre>
           <p className="mt-5 text-sm text-slate-500 dark:text-slate-400">
-            Script is generated server-side and scoped to this site public id.
+            {m.site_settings_script_description()}
           </p>
         </Card>
         <Card>
-          <h2 className="text-xl font-bold">Allowed domains</h2>
+          <h2 className="text-xl font-bold">{m.site_settings_allowed_domains()}</h2>
           <div className="mt-6 grid gap-3">
             {(details.domains ?? []).map((domain) => (
               <div
@@ -75,7 +77,7 @@ function SiteSettings() {
                 key={domain.id}
               >
                 <span>{domain.domain}</span>
-                <Badge>verified</Badge>
+                <Badge>{m.site_settings_verified()}</Badge>
               </div>
             ))}
           </div>
@@ -96,13 +98,17 @@ function SiteSettings() {
               name="domain"
               placeholder="docs.example.com"
             />
-            <Button type="submit">Add</Button>
+            <Button type="submit">{m.site_settings_add()}</Button>
           </form>
         </Card>
         <Card>
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold">Public share</h2>
-            {shareUrl ? <Badge>Enabled</Badge> : <Badge tone="slate">Disabled</Badge>}
+            <h2 className="text-xl font-bold">{m.site_settings_public_share()}</h2>
+            {shareUrl ? (
+              <Badge>{m.site_settings_enabled()}</Badge>
+            ) : (
+              <Badge tone="slate">{m.site_settings_disabled()}</Badge>
+            )}
           </div>
           {shareUrl ? (
             <p className="mt-6 break-all rounded-md border border-[#dee3ea] bg-[#fbfaf7] px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-300">
@@ -117,7 +123,7 @@ function SiteSettings() {
                   .then((data) => {
                     const result = data as { shareLink?: { token?: string } };
                     if (result.shareLink?.token) {
-                      setShareUrl(`${location.origin}/share/${result.shareLink.token}`);
+                      setShareUrl(localizedShareUrl(result.shareLink.token));
                       load();
                     }
                   });
@@ -125,7 +131,7 @@ function SiteSettings() {
               type="button"
             >
               <Link2 className="h-4 w-4" />
-              Generate public link
+              {m.site_settings_generate_public_link()}
             </Button>
             <Button
               disabled={!details.shareLinks?.some((link) => link.enabled === 1)}
@@ -145,18 +151,18 @@ function SiteSettings() {
               variant="secondary"
             >
               <Unlink className="h-4 w-4" />
-              Disable public link
+              {m.site_settings_disable_public_link()}
             </Button>
           </div>
         </Card>
         <Card>
-          <h2 className="text-xl font-bold">Privacy policy</h2>
+          <h2 className="text-xl font-bold">{m.site_settings_privacy_policy()}</h2>
           <div className="mt-7 grid gap-5 text-sm">
             {[
-              "No raw IP stored",
-              "No full raw User-Agent stored",
-              "No cross-site visitor id",
-              "D1 stores daily rollups only",
+              m.login_no_raw_ip_storage(),
+              m.site_settings_no_full_raw_user_agent(),
+              m.site_settings_no_cross_site_visitor_id(),
+              m.site_settings_d1_daily_rollups(),
             ].map((item) => (
               <div className="flex items-center gap-4" key={item}>
                 <span className="h-4 w-4 rounded-full bg-emerald-600" />
@@ -168,28 +174,40 @@ function SiteSettings() {
       </div>
 
       <Card className="mt-6">
-        <h2 className="text-lg font-bold">Site identity</h2>
+        <h2 className="text-lg font-bold">{m.site_settings_site_identity()}</h2>
         <div className="mt-6 grid gap-5 text-sm md:grid-cols-4">
           <div>
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Site id</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {m.site_settings_site_id()}
+            </div>
             <div className="mt-3">{details.site?.id ?? siteId}</div>
           </div>
           <div>
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Public site id
+              {m.site_settings_public_site_id()}
             </div>
-            <div className="mt-3">{details.site?.public_site_id ?? "Pending"}</div>
+            <div className="mt-3">{details.site?.public_site_id ?? m.site_settings_pending()}</div>
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Domain</div>
-            <div className="mt-3">{details.site?.primary_domain ?? "Pending"}</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {m.site_settings_domain()}
+            </div>
+            <div className="mt-3">{details.site?.primary_domain ?? m.site_settings_pending()}</div>
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Share</div>
-            <div className="mt-3">{shareUrl ? "Enabled" : "Disabled"}</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {m.site_settings_share()}
+            </div>
+            <div className="mt-3">
+              {shareUrl ? m.site_settings_enabled() : m.site_settings_disabled()}
+            </div>
           </div>
         </div>
       </Card>
     </AppShell>
   );
+}
+
+function localizedShareUrl(token: string): string {
+  return `${location.origin}${localizeHref(`/share/${token}`, { locale: getLocale() })}`;
 }
