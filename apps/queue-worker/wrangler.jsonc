@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "queue-worker-local",
+  "name": "your-edgetrail-queue-local",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-05",
   "compatibility_flags": ["nodejs_compat"],
@@ -34,7 +34,7 @@
   "upload_source_maps": true,
   "env": {
     "production": {
-      "name": "queue-worker",
+      "name": "your-edgetrail-queue",
       "queues": {
         "consumers": [
           {

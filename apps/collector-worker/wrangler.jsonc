@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "collector-worker-local",
+  "name": "your-edgetrail-collector-local",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-05",
   "compatibility_flags": ["nodejs_compat"],
@@ -34,7 +34,7 @@
   },
   "env": {
     "production": {
-      "name": "collector-worker",
+      "name": "your-edgetrail-collector",
       "secrets": {
         "required": ["HASH_SECRET"]
       },

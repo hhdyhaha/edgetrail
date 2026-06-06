@@ -9,6 +9,8 @@ describe("EdgeTrail naming", () => {
     const oldResourcePrefix = ["edge", "analytics"].join("-");
 
     expect(configs).toContain("your-edgetrail-web");
+    expect(configs).toContain("your-edgetrail-collector");
+    expect(configs).toContain("your-edgetrail-queue");
     expect(configs).toContain("your-edgetrail-events");
     expect(configs).toContain("your-edgetrail-archive-production");
     expect(configs).not.toContain(oldResourcePrefix);
