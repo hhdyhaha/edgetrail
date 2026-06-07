@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import routerSource from "../router.tsx?raw";
 import rootRouteSource from "../routes/__root.tsx?raw";
+import appSiteDashboardSource from "../routes/app.sites.$siteId.index.tsx?raw";
+import appSiteSettingsSource from "../routes/app.sites.$siteId.settings.tsx?raw";
 import appSiteLayoutSource from "../routes/app.sites.$siteId.tsx?raw";
 import appSitesLayoutSource from "../routes/app.sites.tsx?raw";
 import appLayoutSource from "../routes/app.tsx?raw";
@@ -19,6 +21,41 @@ describe("authenticated app layout route", () => {
   ])("renders an Outlet in %s so nested app routes can display their pages", (_fileName, source) => {
     expect(source).toContain("Outlet");
     expect(source).toContain("<Outlet />");
+  });
+
+  it("keeps site switching in the current scope card instead of sidebar nav groups", () => {
+    expect(appShellSource).toContain("siteContext");
+    expect(appShellSource).toContain("app_shell_current_scope");
+    expect(appShellSource).toContain('fetch("/api/sites")');
+    expect(appShellSource).toContain("aria-expanded");
+    expect(appShellSource).toContain("app_shell_switch_site");
+    expect(appShellSource).toContain('to="/app/sites/$siteId"');
+    expect(appShellSource).not.toContain("app_shell_global_nav");
+    expect(appShellSource).not.toContain("app_shell_current_project_nav");
+    expect(appShellSource).not.toContain("app_shell_pipeline");
+    expect(appShellSource).not.toContain("app_shell_privacy_guardrails");
+  });
+
+  it("keeps the scope card compact and non-overflowing on mobile", () => {
+    expect(appShellSource).toContain("min-h-0");
+    expect(appShellSource).toContain("lg:min-h-[calc(100vh-2.5rem)]");
+    expect(appShellSource).not.toContain("flex min-h-[calc(100vh-2.5rem)]");
+    expect(appShellSource).toContain("break-all");
+    expect(appShellSource).toContain("max-w-full");
+  });
+
+  it("passes fetched site identity into single-site dashboard shells", () => {
+    expect(appSiteDashboardSource).toContain("setSiteContext");
+    expect(appSiteDashboardSource).toContain("fetch(`/api/sites/");
+    expect(appSiteDashboardSource).toContain("siteId");
+    expect(appSiteDashboardSource).toContain("siteContext={siteContext}");
+    expect(appSiteSettingsSource).toContain("siteContext={siteContext}");
+  });
+
+  it("keeps long settings content inside scrollable mobile containers", () => {
+    expect(appSiteSettingsSource).toContain("min-w-0");
+    expect(appSiteSettingsSource).toContain("max-w-full");
+    expect(appSiteSettingsSource).toContain("overflow-x-auto");
   });
 });
 

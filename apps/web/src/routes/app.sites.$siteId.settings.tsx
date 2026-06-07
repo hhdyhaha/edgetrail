@@ -4,10 +4,16 @@ import { Check, Copy, Link2, Unlink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { m } from "#/paraglide/messages";
 import { getLocale, localizeHref } from "#/paraglide/runtime";
-import { AppShell } from "#/ui/app-shell";
+import { AppShell, type SiteContext } from "#/ui/app-shell";
 
 type SiteDetails = {
-  site?: { id: string; name: string; primary_domain: string; public_site_id: string };
+  site?: {
+    id: string;
+    name: string;
+    primary_domain: string;
+    public_site_id: string;
+    status: string;
+  };
   domains?: { id: string; domain: string; verified_at: string }[];
   shareLinks?: { id: string; token: string; enabled: number }[];
   trackingScript?: string;
@@ -20,6 +26,14 @@ function SiteSettings() {
   const [details, setDetails] = useState<SiteDetails>({});
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const siteContext: SiteContext = details.site
+    ? {
+        id: details.site.id,
+        name: details.site.name,
+        primaryDomain: details.site.primary_domain,
+        status: details.site.status,
+      }
+    : { id: siteId };
 
   const load = () => {
     void fetch(`/api/sites/${siteId}`)
@@ -36,12 +50,13 @@ function SiteSettings() {
   return (
     <AppShell
       active="Settings"
+      siteContext={siteContext}
       siteId={siteId}
       subtitle={m.site_settings_subtitle()}
       title={m.site_settings_title()}
     >
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-bold">{m.site_settings_tracking_script()}</h2>
             <button
@@ -61,14 +76,14 @@ function SiteSettings() {
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
           </div>
-          <pre className="mt-6 min-h-28 overflow-auto rounded-lg bg-[#1f2937] p-6 text-sm leading-7 text-slate-200">
+          <pre className="mt-6 min-h-28 max-w-full overflow-x-auto rounded-lg bg-[#1f2937] p-4 text-sm leading-7 text-slate-200 sm:p-6">
             {details.trackingScript}
           </pre>
           <p className="mt-5 text-sm text-slate-500 dark:text-slate-400">
             {m.site_settings_script_description()}
           </p>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <h2 className="text-xl font-bold">{m.site_settings_allowed_domains()}</h2>
           <div className="mt-6 grid gap-3">
             {(details.domains ?? []).map((domain) => (
@@ -82,7 +97,7 @@ function SiteSettings() {
             ))}
           </div>
           <form
-            className="mt-6 flex gap-3"
+            className="mt-6 flex flex-col gap-3 sm:flex-row"
             onSubmit={(event) => {
               event.preventDefault();
               const form = new FormData(event.currentTarget);
@@ -101,7 +116,7 @@ function SiteSettings() {
             <Button type="submit">{m.site_settings_add()}</Button>
           </form>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold">{m.site_settings_public_share()}</h2>
             {shareUrl ? (
@@ -155,7 +170,7 @@ function SiteSettings() {
             </Button>
           </div>
         </Card>
-        <Card>
+        <Card className="min-w-0">
           <h2 className="text-xl font-bold">{m.site_settings_privacy_policy()}</h2>
           <div className="mt-7 grid gap-5 text-sm">
             {[
@@ -173,26 +188,30 @@ function SiteSettings() {
         </Card>
       </div>
 
-      <Card className="mt-6">
+      <Card className="mt-6 min-w-0">
         <h2 className="text-lg font-bold">{m.site_settings_site_identity()}</h2>
         <div className="mt-6 grid gap-5 text-sm md:grid-cols-4">
           <div>
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               {m.site_settings_site_id()}
             </div>
-            <div className="mt-3">{details.site?.id ?? siteId}</div>
+            <div className="mt-3 break-all">{details.site?.id ?? siteId}</div>
           </div>
           <div>
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               {m.site_settings_public_site_id()}
             </div>
-            <div className="mt-3">{details.site?.public_site_id ?? m.site_settings_pending()}</div>
+            <div className="mt-3 break-all">
+              {details.site?.public_site_id ?? m.site_settings_pending()}
+            </div>
           </div>
           <div>
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               {m.site_settings_domain()}
             </div>
-            <div className="mt-3">{details.site?.primary_domain ?? m.site_settings_pending()}</div>
+            <div className="mt-3 break-all">
+              {details.site?.primary_domain ?? m.site_settings_pending()}
+            </div>
           </div>
           <div>
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
