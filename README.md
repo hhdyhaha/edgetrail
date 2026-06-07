@@ -122,7 +122,7 @@ Keep local/test and production configuration in separate layers:
 | --- | --- | --- |
 | Committed templates | `wrangler.jsonc`, `.dev.vars.example` | Public binding shape, required secret names, localhost defaults, and placeholder production bindings. |
 | Local runtime | `wrangler.local.jsonc`, `.dev.vars` | Ignored files for local or staging resources, localhost URLs, and local/test secrets. |
-| Production runtime | Cloudflare Worker secrets and `env.production` bindings | Real production OAuth credentials, API tokens, resource IDs, and production origins. |
+| Production runtime | `wrangler.production.local.jsonc` and Cloudflare Worker secrets | Ignored private production bindings, real resource IDs, production origins, OAuth credentials, and API tokens. |
 
 For Google OAuth, use one OAuth client for local/test with:
 
@@ -240,15 +240,39 @@ placeholder production bindings in private deployment config, set Wrangler
 secrets, apply production D1 migrations, and verify the full collector to
 dashboard flow in your own account.
 
+Create private production deployment configs from the committed examples:
+
+```sh
+cp apps/web/wrangler.production.example.jsonc apps/web/wrangler.production.local.jsonc
+cp apps/collector-worker/wrangler.production.example.jsonc apps/collector-worker/wrangler.production.local.jsonc
+cp apps/queue-worker/wrangler.production.example.jsonc apps/queue-worker/wrangler.production.local.jsonc
+```
+
+Fill only the ignored `wrangler.production.local.jsonc` files with real Worker
+names, production origins, D1 IDs, Queue names, R2 bucket names, and Workers
+Analytics Engine dataset names. Do not put secret values in those files; keep
+secrets in Cloudflare Worker secrets.
+
 Production secrets must be set on the production Worker environment, not in
 local files. For example, run secret commands with `--env production` for the
 production environment.
+
+Once the private configs and secrets are ready, deploy from the repository root:
+
+```sh
+pnpm deploy:production
+```
+
+The deploy script refuses to run if any private production config still contains
+obvious placeholder values such as `your-edgetrail`, `replace-with`, or
+`example.com`.
 
 Do not commit:
 
 - `.dev.vars`
 - `.env`
 - `wrangler.local.jsonc`
+- `wrangler.production.local.jsonc`
 - Cloudflare API tokens
 - Google OAuth secrets
 - Better Auth secrets

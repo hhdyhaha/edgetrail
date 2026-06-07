@@ -111,7 +111,7 @@ token、OAuth secret 和本地状态文件都必须留在 git 之外。
 | --- | --- | --- |
 | 已提交模板 | `wrangler.jsonc`、`.dev.vars.example` | 公开 binding 结构、必需 secret 名称、localhost 默认值和生产 binding 占位符。 |
 | 本地运行 | `wrangler.local.jsonc`、`.dev.vars` | 被 git 忽略的本地/测试资源、localhost URL 和本地/测试 secret。 |
-| 生产运行 | Cloudflare Worker secrets 和 `env.production` bindings | 真实生产 OAuth 凭证、API token、资源 ID 和生产 origin。 |
+| 生产运行 | `wrangler.production.local.jsonc` 和 Cloudflare Worker secrets | 被 git 忽略的私有生产 binding、真实资源 ID、生产 origin、OAuth 凭证和 API token。 |
 
 Google OAuth 要使用两个 client：本地/测试 client 授权：
 
@@ -223,14 +223,36 @@ i18n、API 权限和仪表盘 view-model 测试。
 binding 占位符，设置 Wrangler secrets，应用生产 D1 migrations，并在你自己的账号里验证
 从 collector 到 dashboard 的完整链路。
 
+从已提交的示例复制私有生产部署配置：
+
+```sh
+cp apps/web/wrangler.production.example.jsonc apps/web/wrangler.production.local.jsonc
+cp apps/collector-worker/wrangler.production.example.jsonc apps/collector-worker/wrangler.production.local.jsonc
+cp apps/queue-worker/wrangler.production.example.jsonc apps/queue-worker/wrangler.production.local.jsonc
+```
+
+只在被 git 忽略的 `wrangler.production.local.jsonc` 中填写真实 Worker 名称、生产
+origin、D1 ID、Queue 名称、R2 bucket 名称和 Workers Analytics Engine dataset 名称。
+不要把 secret 值写进这些文件；secret 应保存在 Cloudflare Worker secrets 中。
+
 生产 secret 必须设置到 production Worker 环境，不能写进本地文件。例如生产环境的
 secret 命令需要带 `--env production`。
+
+私有配置和 secret 都准备好后，在仓库根目录部署：
+
+```sh
+pnpm deploy:production
+```
+
+如果私有生产配置里还包含 `your-edgetrail`、`replace-with` 或 `example.com` 这类明显
+占位符，部署脚本会拒绝运行。
 
 不要提交：
 
 - `.dev.vars`
 - `.env`
 - `wrangler.local.jsonc`
+- `wrangler.production.local.jsonc`
 - Cloudflare API token
 - Google OAuth secret
 - Better Auth secret

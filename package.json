@@ -21,6 +21,7 @@
     "dev:collector:local": "pnpm --filter collector-worker dev:local",
     "dev:queue": "pnpm --filter queue-worker dev",
     "dev:queue:local": "pnpm --filter queue-worker dev:local",
+    "deploy:production": "bash scripts/deploy-production.sh",
     "db:generate": "pnpm --filter @edgetrail/db db:generate"
   },
   "devDependencies": {
